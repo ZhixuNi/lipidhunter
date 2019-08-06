@@ -27,25 +27,47 @@ import re
 class ElemCalc:
     def __init__(self):
 
-        pa_hg_elem = {'C': 0, 'H': 3, 'O': 4, 'P': 1, 'N': 0}
-        pc_hg_elem = {'C': 5, 'H': 14, 'O': 4, 'P': 1, 'N': 1}
-        pe_hg_elem = {'C': 2, 'H': 8, 'O': 4, 'P': 1, 'N': 1}
-        pg_hg_elem = {'C': 3, 'H': 9, 'O': 6, 'P': 1, 'N': 0}
-        pi_hg_elem = {'C': 6, 'H': 13, 'O': 9, 'P': 1, 'N': 0}
-        pip_hg_elem = {'C': 6, 'H': 14, 'O': 12, 'P': 2, 'N': 0}
-        ps_hg_elem = {'C': 3, 'H': 8, 'O': 6, 'P': 1, 'N': 1}
-        tg_hg_elem = {'C': 0, 'H': 0, 'O': 0, 'P': 0, 'N': 0}
-        fa_hg_elem = {'C': 0, 'H': 0, 'O': 0, 'P': 0, 'N': 0}
+        # Note: can be compine in a unify dct (georgia: 23.1.2019)
+        pa_hg_elem = {'C': 0, 'H': 3, 'O': 4, 'P': 1, 'N': 0, 'Na': 0}
+        pl_elem_gen = {'C': 3, 'H': 2, 'O': 4, 'P': 0, 'N': 0, 'Na': 0}
+        pc_hg_elem = {'C': 5, 'H': 14, 'O': 4, 'P': 1, 'N': 1, 'Na': 0}
+        pe_hg_elem = {'C': 2, 'H': 8, 'O': 4, 'P': 1, 'N': 1, 'Na': 0}
+        pg_hg_elem = {'C': 3, 'H': 9, 'O': 6, 'P': 1, 'N': 0, 'Na': 0}
+        pi_hg_elem = {'C': 6, 'H': 13, 'O': 9, 'P': 1, 'N': 0, 'Na': 0}
+        pip_hg_elem = {'C': 6, 'H': 14, 'O': 12, 'P': 2, 'N': 0, 'Na': 0}
+        ps_hg_elem = {'C': 3, 'H': 8, 'O': 6, 'P': 1, 'N': 1, 'Na': 0}
+        self.gen_hg_elem = {'C': 0, 'H': 0, 'O': 0, 'P': 0, 'N': 0, 'Na': 0} # General name for the different compounds such as TG, FA
+        tg_elem_gen = {'C': 3, 'H': 2, 'O': 6, 'P': 0, 'N': 0, 'Na': 0}
+        dg_elem_gen = {'C': 3, 'H': 4, 'O': 5, 'P': 0, 'N': 0, 'Na': 0}
+        fa_elem_gen = {'C': 0, 'H': 0, 'O': 2, 'P': 0, 'N': 0, 'Na': 0}
+        lpl_elem_gen = {'C': 3, 'H': 4, 'O': 3, 'P': 0, 'N': 0, 'Na': 0}
+        cer_elem_gen = {'C': 0, 'H': 1, 'O': 0, 'P': 0, 'N': 1, 'Na': 0}
 
+        # Note: Will be deleted (georgia: 14.2.2019)
         self.lipid_hg_elem_dct = {'PA': pa_hg_elem, 'PC': pc_hg_elem, 'PE': pe_hg_elem, 'PG': pg_hg_elem,
                                   'PI': pi_hg_elem, 'PS': ps_hg_elem, 'PIP': pip_hg_elem,
                                   'LPA': pa_hg_elem, 'LPC': pc_hg_elem, 'LPE': pe_hg_elem, 'LPG': pg_hg_elem,
                                   'LPI': pi_hg_elem, 'LPS': ps_hg_elem, 'LPIP': pip_hg_elem,
-                                  'TG': tg_hg_elem,'FA': fa_hg_elem, 'DG': tg_hg_elem}
+                                  'TG': self.gen_hg_elem,'FA': self.gen_hg_elem, 'DG': self.gen_hg_elem, 'Cer': self.gen_hg_elem}
+        self.lipid_hg_elem_dct2 = {'PA': [pa_hg_elem, pl_elem_gen], 'PC': [pc_hg_elem, pl_elem_gen],
+                                   'PE': [pe_hg_elem, pl_elem_gen], 'PG': [pg_hg_elem, pl_elem_gen],
+                                  'PI': [pi_hg_elem, pl_elem_gen], 'PS': [ps_hg_elem, pl_elem_gen],
+                                   'PIP': [pip_hg_elem, pl_elem_gen], 'LPA': [pa_hg_elem, lpl_elem_gen],
+                                   'LPC': [pc_hg_elem, lpl_elem_gen], 'LPE': [pe_hg_elem, lpl_elem_gen],
+                                   'LPG': [pg_hg_elem, lpl_elem_gen], 'LPI': [pi_hg_elem, lpl_elem_gen],
+                                   'LPS': [ps_hg_elem, lpl_elem_gen], 'LPIP': [pip_hg_elem, lpl_elem_gen],
+                                  'TG': [self.gen_hg_elem, tg_elem_gen], 'FA': [self.gen_hg_elem, fa_elem_gen],
+                                   'DG': [self.gen_hg_elem, dg_elem_gen], 'Cer': [self.gen_hg_elem, cer_elem_gen]}
 
         self.glycerol_bone_elem_dct = {'C': 3, 'H': 2}
-        self.link_o_elem_dct = {'O': -1, 'H': 2}
-        self.link_p_elem_dct = {'O': -1}
+        # Note: will be deleted (georgia: 14.2.2019)
+        # self.link_o_elem_dct = {'O': -1, 'H': 2}
+        # self.link_p_elem_dct = {'O': -1}
+        self.link_elem_dct = {'O-': {'O': -1, 'H': 2},
+                              'P-': {'O': -1},
+                              'm': {'O': 1, 'H':3, 'N':1},
+                              'd': {'O': 2},
+                              't': {'O':3}}
 
         self.periodic_table_dct = {'H': [(1.0078250321, 0.999885), (2.0141017780, 0.0001157)],
                                    'D': [(2.0141017780, 0.0001157)],
@@ -59,18 +81,48 @@ class ElemCalc:
                                    'K': [(38.9637069, 0.932581), (39.96399867, 0.000117), (40.96182597, 0.067302)],
                                    }
 
-    @staticmethod
-    def decode_abbr(abbr):
+        self.fa_rgx = re.compile(r'([a-zA-Z\-]{1,3})*(\()*(([a-zA-Z\-]{1,3})*(\d{1,2})(:)(\d))(\))*')
 
-        pl_checker = re.compile(r'(P[ACEGSI])([(])(.*)([)])')
-        lpl_checker = re.compile(r'(LP[ACEGSI])([(])(.*)([)])')
-        pip_checker = re.compile(r'(PIP)([(])(.*)([)])')
-        tg_checker = re.compile(r'(TG)([(])(.*)([)])')
-        dg_checker = re.compile(r'(DG)([(])(.*)([)])')
-        fa_checker = re.compile(r'(FA)(\d{1,2})([:])(\d{1,2})')
-        fa_short_checker = re.compile(r'(\d{1,2})([:])(\d{1,2})')
-        fa_o_checker = re.compile(r'(O-)(\d{1,2})([:])(\d)')
-        fa_p_checker = re.compile(r'(P-)(\d{1,2})([:])(\d)')
+        fa_2_link_dct = {'A-': ['A-A-', {'A':''}],
+                       'O-': ['O-A-', {'O':'', 'A':'O-'}],
+                       'P-': ['P-A-', {'P':'', 'A':'P-'}]}
+        fa_1_link_dct = {'A-': ['A-', {'A': ''}],
+                       'O-': ['O-', {'O': ''}],
+                       'P-': ['P-', {'P': ''}]}
+        fa_3_link_dct = {'A-': ['A-A-A-', {'A': ''}],
+                         'O-': ['O-A-A-', {'O': '', 'A':'O-'}],
+                         'P-': ['P-A-A-', {'P': '', 'A':'P-'}]}
+        self.lipid_link_dct = {'PL': fa_2_link_dct, 'PA': fa_2_link_dct, 'PC': fa_2_link_dct, 'PE': fa_2_link_dct,
+                               'PG':fa_2_link_dct, 'PI': fa_2_link_dct, 'PIP':fa_2_link_dct, 'PS': fa_2_link_dct,
+                               'LPL': fa_1_link_dct, 'LPA': fa_1_link_dct, 'LPC': fa_1_link_dct, 'LPE': fa_1_link_dct,
+                               'LPG': fa_1_link_dct, 'LPI': fa_1_link_dct, 'LPIP': fa_1_link_dct, 'LPS': fa_1_link_dct,
+                               'TG': fa_3_link_dct, 'DG': fa_2_link_dct, "Cer": ''}
+
+        self.ion_mode_elem = {'[M-H]-': [{'H': -1}, '-'], '[M+FA-H]-': [{'H': 1, 'C': 1, 'O': 2}, '-'],
+                              '[M+HCOO]-': [{'H': 1, 'C': 1, 'O': 2}, '-'],
+                              '[M+CH3COO]-': [{'H': 3, 'C': 2, 'O': 2}, '-'],
+                              '[M+OAc]-': [{'H': 3, 'C': 2, 'O': 2}, '-'], '[M+H]+': [{'H': 1}, '+'],
+                              '[M+NH4]+': [{'N': 1, 'H': 4}, '+'], '[M+Na]+': [{'Na': 1}, '+'],
+                              '[M+K]+': [{'K': 1}, '+'], '[M+H-H2O]+': [{'H': -1, 'O': -1}, '+'],
+                              '[M+H-2xH2O]+': [{'H': -3, 'O': -2}, '+']}
+
+
+    def decode_abbr(self, abbr):
+        # Compine: below regexp can be compine all together
+        # Change : with the self.fa.rgx
+        # Delet: will be deleted (georgia: 14.2.2019)
+        # pl_checker = re.compile(r'(P[ACEGSI])([(])(.*)([)])')
+        # lpl_checker = re.compile(r'(LP[ACEGSI])([(])(.*)([)])')
+        # pip_checker = re.compile(r'(PIP)([(])(.*)([)])')
+        # tg_checker = re.compile(r'(TG)([(])(.*)([)])')
+        # dg_checker = re.compile(r'(DG)([(])(.*)([)])')
+        # fa_checker = re.compile(r'(FA)(\d{1,2})([:])(\d{1,2})')
+        # fa_short_checker = re.compile(r'(\d{1,2})([:])(\d{1,2})')
+        # fa_o_checker = re.compile(r'(O-)(\d{1,2})([:])(\d)')
+        # fa_p_checker = re.compile(r'(P-)(\d{1,2})([:])(\d)')
+
+        # fa_rgx = re.compile(r'([a-zA-Z\-]{1,3})(\()*([a-zA-Z\-]{1,3})*(\d{1,2})(:)(\d)(\))*')
+
 
         # Check PL Type
         _pl_typ = ''
@@ -80,296 +132,335 @@ class ElemCalc:
         bulk_fa_db = 0
         lyso_fa_linker_dct = {'fa1': '', 'fa2': ''}
 
-        # TODO(georgia.angelidou@uni-leipzig.de): consideration to put se elif statement
-        if pl_checker.match(abbr):
-            # print('PL')
-            pl_re_chk = pl_checker.match(abbr)
-            pl_typ_lst = pl_re_chk.groups()
-            _pl_typ = pl_typ_lst[0]
-            bulk_fa_typ = pl_typ_lst[2]
-        if lpl_checker.match(abbr):
-            # print('PL')
-            lpl_re_chk = lpl_checker.match(abbr)
-            lpl_typ_lst = lpl_re_chk.groups()
-            _pl_typ = lpl_typ_lst[0]
-            bulk_fa_typ = lpl_typ_lst[2]
-        if pip_checker.match(abbr):
-            # print('PIP')
-            pip_re_chk = pip_checker.match(abbr)
-            pip_typ_lst = pip_re_chk.groups()
-            _pl_typ = pip_typ_lst[0]
-            bulk_fa_typ = pip_typ_lst[2]
-        if tg_checker.match(abbr):
-            # print('TG')
-            tg_re_chk = tg_checker.match(abbr)
-            tg_typ_lst = tg_re_chk.groups()
-            _pl_typ = tg_typ_lst[0]
-            bulk_fa_typ = tg_typ_lst[2]
-        if dg_checker.match(abbr):
-            dg_re_chk = dg_checker.match(abbr)
-            dg_typ_lst = dg_re_chk.groups()
-            _pl_typ = dg_typ_lst[0]
-            bulk_fa_typ = dg_typ_lst[2]
-        if fa_checker.match(abbr):
-            # print('FA')
-            _pl_typ = 'FA'
-            bulk_fa_typ = abbr
-            fa_chk = fa_checker.match(abbr)
-            bulk_fa_lst = fa_chk.groups()
-            bulk_fa_c = bulk_fa_lst[1]
-            bulk_fa_db = bulk_fa_lst[3]
-            bulk_fa_linker = 'A-'
-            lyso_fa_linker_dct = {'A': ''}
-        if fa_short_checker.match(abbr):
-            # print('FA')
-            _pl_typ = 'FA'
-            bulk_fa_typ = abbr
-            fa_chk = fa_checker.match(abbr)
-            bulk_fa_lst = fa_chk.groups()
-            bulk_fa_c = bulk_fa_lst[0]
-            bulk_fa_db = bulk_fa_lst[2]
-            bulk_fa_linker = 'A-'
-            lyso_fa_linker_dct = {'A': ''}
-        if fa_o_checker.match(abbr):
-            # print('FA')
-            _pl_typ = 'FA'
-            bulk_fa_typ = abbr
-            fa_chk = fa_o_checker.match(abbr)
-            bulk_fa_lst = fa_chk.groups()
-            bulk_fa_c = bulk_fa_lst[1]
-            bulk_fa_db = bulk_fa_lst[3]
-            bulk_fa_linker = 'O-'
-            lyso_fa_linker_dct = {'O': ''}
-        if fa_p_checker.match(abbr):
-            # print('FA')
-            _pl_typ = 'FA'
-            bulk_fa_typ = abbr
-            fa_chk = fa_p_checker.match(abbr)
-            bulk_fa_lst = fa_chk.groups()
-            bulk_fa_c = bulk_fa_lst[1]
-            bulk_fa_db = bulk_fa_lst[3]
-            bulk_fa_linker = 'P-'
-            lyso_fa_linker_dct = {'P': ''}
+        # Compine: all the below can be united in one statement (georgia: 13.2.2019)
+        # if pl_checker.match(abbr):
+        #     # print('PL')
+        #     pl_re_chk = pl_checker.match(abbr)
+        #     pl_typ_lst = pl_re_chk.groups()
+        #     _pl_typ = pl_typ_lst[0]
+        #     bulk_fa_typ = pl_typ_lst[2]
+        # if lpl_checker.match(abbr):
+        #     # print('PL')
+        #     lpl_re_chk = lpl_checker.match(abbr)
+        #     lpl_typ_lst = lpl_re_chk.groups()
+        #     _pl_typ = lpl_typ_lst[0]
+        #     bulk_fa_typ = lpl_typ_lst[2]
+        # if pip_checker.match(abbr):
+        #     # print('PIP')
+        #     pip_re_chk = pip_checker.match(abbr)
+        #     pip_typ_lst = pip_re_chk.groups()
+        #     _pl_typ = pip_typ_lst[0]
+        #     bulk_fa_typ = pip_typ_lst[2]
+        # if tg_checker.match(abbr):
+        #     # print('TG')
+        #     tg_re_chk = tg_checker.match(abbr)
+        #     tg_typ_lst = tg_re_chk.groups()
+        #     _pl_typ = tg_typ_lst[0]
+        #     bulk_fa_typ = tg_typ_lst[2]
+        # if dg_checker.match(abbr):
+        #     dg_re_chk = dg_checker.match(abbr)
+        #     dg_typ_lst = dg_re_chk.groups()
+        #     _pl_typ = dg_typ_lst[0]
+        #     bulk_fa_typ = dg_typ_lst[2]
+        abbr_re_chk = self.fa_rgx.match(abbr)
+        if abbr_re_chk :
 
-        if _pl_typ in ['PL', 'PA', 'PC', 'PE', 'PG', 'PI', 'PIP', 'PS']:
-            if fa_short_checker.match(bulk_fa_typ):
-                bulk_fa_linker = 'A-A-'
-                lyso_fa_linker_dct = {'A': ''}
-                fa_chk = fa_short_checker.match(bulk_fa_typ)
-                bulk_fa_lst = fa_chk.groups()
-                bulk_fa_c = bulk_fa_lst[0]
-                bulk_fa_db = bulk_fa_lst[2]
-            # elif fa_short_checker.match(bulk_fa_typ):
-            #     bulk_fa_linker = ''
-            #     lyso_fa_linker_dct = {'A': ''}
-            #     fa_chk = fa_short_checker.match(bulk_fa_typ)
-            #     bulk_fa_lst = fa_chk.groups()
-            #     bulk_fa_c = bulk_fa_lst[0]
-            #     bulk_fa_db = bulk_fa_lst[2]
-            elif fa_o_checker.match(bulk_fa_typ):
-                bulk_fa_linker = 'O-A-'
-                lyso_fa_linker_dct = {'O': '', 'A': 'O-'}  # link of the other sn after NL of this sn
-                fa_chk = fa_o_checker.match(bulk_fa_typ)
-                bulk_fa_lst = fa_chk.groups()
-                bulk_fa_c = bulk_fa_lst[1]
-                bulk_fa_db = bulk_fa_lst[3]
-            elif fa_p_checker.match(bulk_fa_typ):
-                bulk_fa_linker = 'P-A-'
-                lyso_fa_linker_dct = {'P': '', 'A': 'P-'}  # link of the other sn after NL of this sn
-                fa_chk = fa_p_checker.match(bulk_fa_typ)
-                bulk_fa_lst = fa_chk.groups()
-                bulk_fa_c = bulk_fa_lst[1]
-                bulk_fa_db = bulk_fa_lst[3]
-
-        elif _pl_typ in ['LPL', 'LPA', 'LPC', 'LPE', 'LPG', 'LPI', 'LPIP', 'LPS']:
-            if fa_short_checker.match(bulk_fa_typ):
+            abbr_typ_lst = abbr_re_chk.groups()
+            print (abbr_typ_lst)
+            if abbr_typ_lst[0] in [None, 'O-', 'P-', 'A-']:
+                _pl_typ = 'FA'
+            else:
+                _pl_typ = abbr_typ_lst[0]
+            bulk_fa_c = abbr_typ_lst[4]
+            bulk_fa_db = abbr_typ_lst[6]
+            if abbr_typ_lst[3] is None:
                 bulk_fa_linker = 'A-'
-                lyso_fa_linker_dct = {'A': ''}
-                fa_chk = fa_short_checker.match(bulk_fa_typ)
-                bulk_fa_lst = fa_chk.groups()
-                bulk_fa_c = bulk_fa_lst[0]
-                bulk_fa_db = bulk_fa_lst[2]
-            elif fa_o_checker.match(bulk_fa_typ):
-                bulk_fa_linker = 'O-'
-                lyso_fa_linker_dct = {'O': ''}  # link of the other sn after NL of this sn
-                fa_chk = fa_o_checker.match(bulk_fa_typ)
-                bulk_fa_lst = fa_chk.groups()
-                bulk_fa_c = bulk_fa_lst[1]
-                bulk_fa_db = bulk_fa_lst[3]
-            elif fa_p_checker.match(bulk_fa_typ):
-                bulk_fa_linker = 'P-'
-                lyso_fa_linker_dct = {'P': ''}  # link of the other sn after NL of this sn
-                fa_chk = fa_p_checker.match(bulk_fa_typ)
-                bulk_fa_lst = fa_chk.groups()
-                bulk_fa_c = bulk_fa_lst[1]
-                bulk_fa_db = bulk_fa_lst[3]
+            else:
+                bulk_fa_linker = abbr_typ_lst[3]
 
-        elif _pl_typ in ['TG']:
-            if fa_short_checker.match(bulk_fa_typ):
-                bulk_fa_linker = 'A-A-A-'
-                lyso_fa_linker_dct = {'A': ''}
-                fa_chk = fa_short_checker.match(bulk_fa_typ)
-                bulk_fa_lst = fa_chk.groups()
-                bulk_fa_c = bulk_fa_lst[0]
-                bulk_fa_db = bulk_fa_lst[2]
-            elif fa_o_checker.match(bulk_fa_typ):
-                bulk_fa_linker = 'O-A-A-'
-                lyso_fa_linker_dct = {'O': '', 'A': 'O-'}  # link of the other sn after NL of this sn
-                fa_chk = fa_o_checker.match(bulk_fa_typ)
-                bulk_fa_lst = fa_chk.groups()
-                bulk_fa_c = bulk_fa_lst[1]
-                bulk_fa_db = bulk_fa_lst[3]
-            elif fa_p_checker.match(bulk_fa_typ):
-                bulk_fa_linker = 'P-A-A-'
-                lyso_fa_linker_dct = {'P': '', 'A': 'P-'}  # link of the other sn after NL of this sn
-                fa_chk = fa_p_checker.match(bulk_fa_typ)
-                bulk_fa_lst = fa_chk.groups()
-                bulk_fa_c = bulk_fa_lst[1]
-                bulk_fa_db = bulk_fa_lst[3]
-        elif _pl_typ in ['DG']:
-            if fa_short_checker.match(bulk_fa_typ):
-                bulk_fa_linker = 'A-A-'
-                lyso_fa_linker_dct = {'A': ''}
-                fa_chk = fa_short_checker.match(bulk_fa_typ)
-                bulk_fa_lst = fa_chk.groups()
-                bulk_fa_c = bulk_fa_lst[0]
-                bulk_fa_db = bulk_fa_lst[2]
-            elif fa_o_checker.match(bulk_fa_typ):
-                bulk_fa_linker = 'O-A-'
-                lyso_fa_linker_dct = {'O': '', 'A': 'O-'}  # link of the other sn after NL of this sn
-                fa_chk = fa_o_checker.match(bulk_fa_typ)
-                bulk_fa_lst = fa_chk.groups()
-                bulk_fa_c = bulk_fa_lst[1]
-                bulk_fa_db = bulk_fa_lst[3]
-            elif fa_p_checker.match(bulk_fa_typ):
-                bulk_fa_linker = 'P-A-'
-                lyso_fa_linker_dct = {'P': '', 'A': 'P-'}  # link of the other sn after NL of this sn
-                fa_chk = fa_p_checker.match(bulk_fa_typ)
-                bulk_fa_lst = fa_chk.groups()
-                bulk_fa_c = bulk_fa_lst[1]
-                bulk_fa_db = bulk_fa_lst[3]
+        # Delet: will be delete all combine in the above section (georgia: 13.2.2019)
+        # print(abbr)
+        # # if fa_checker.match(abbr):
+        # #     # print('FA')
+        # #     _pl_typ = 'FA'
+        # #     bulk_fa_typ = abbr
+        # #     fa_chk = fa_checker.match(abbr)
+        # #     bulk_fa_lst = fa_chk.groups()
+        # #     bulk_fa_c = bulk_fa_lst[1]
+        # #     bulk_fa_db = bulk_fa_lst[3]
+        # #     bulk_fa_linker = 'A-'
+        # #     lyso_fa_linker_dct = {'A': ''}
+        # if fa_short_checker.match(abbr):
+        #     # print('FA')
+        #     _pl_typ = 'FA'
+        #     bulk_fa_typ = abbr
+        #     fa_chk = fa_short_checker.match(abbr)
+        #     bulk_fa_lst = fa_chk.groups()
+        #     bulk_fa_c = bulk_fa_lst[0]
+        #     bulk_fa_db = bulk_fa_lst[2]
+        #     bulk_fa_linker = 'A-'
+        #     lyso_fa_linker_dct = {'A': ''}
+        # if fa_o_checker.match(abbr):
+        #     # print('FA')
+        #     _pl_typ = 'FA'
+        #     bulk_fa_typ = abbr
+        #     fa_chk = fa_o_checker.match(abbr)
+        #     bulk_fa_lst = fa_chk.groups()
+        #     bulk_fa_c = bulk_fa_lst[1]
+        #     bulk_fa_db = bulk_fa_lst[3]
+        #     bulk_fa_linker = 'O-'
+        #     lyso_fa_linker_dct = {'O': ''}
+        # if fa_p_checker.match(abbr):
+        #     # print('FA')
+        #     _pl_typ = 'FA'
+        #     bulk_fa_typ = abbr
+        #     fa_chk = fa_p_checker.match(abbr)
+        #     bulk_fa_lst = fa_chk.groups()
+        #     bulk_fa_c = bulk_fa_lst[1]
+        #     bulk_fa_db = bulk_fa_lst[3]
+        #     bulk_fa_linker = 'P-'
+        #     lyso_fa_linker_dct = {'P': ''}
+        #
+        # if _pl_typ in ['PL', 'PA', 'PC', 'PE', 'PG', 'PI', 'PIP', 'PS']:
+        #     if fa_short_checker.match(bulk_fa_typ):
+        #         bulk_fa_linker = 'A-A-'
+        #         lyso_fa_linker_dct = {'A': ''}
+        #         fa_chk = fa_short_checker.match(bulk_fa_typ)
+        #         bulk_fa_lst = fa_chk.groups()
+        #         bulk_fa_c = bulk_fa_lst[0]
+        #         bulk_fa_db = bulk_fa_lst[2]
+        #     # elif fa_short_checker.match(bulk_fa_typ):
+        #     #     bulk_fa_linker = ''
+        #     #     lyso_fa_linker_dct = {'A': ''}
+        #     #     fa_chk = fa_short_checker.match(bulk_fa_typ)
+        #     #     bulk_fa_lst = fa_chk.groups()
+        #     #     bulk_fa_c = bulk_fa_lst[0]
+        #     #     bulk_fa_db = bulk_fa_lst[2]
+        #     elif fa_o_checker.match(bulk_fa_typ):
+        #         bulk_fa_linker = 'O-A-'
+        #         lyso_fa_linker_dct = {'O': '', 'A': 'O-'}  # link of the other sn after NL of this sn
+        #         fa_chk = fa_o_checker.match(bulk_fa_typ)
+        #         bulk_fa_lst = fa_chk.groups()
+        #         bulk_fa_c = bulk_fa_lst[1]
+        #         bulk_fa_db = bulk_fa_lst[3]
+        #     elif fa_p_checker.match(bulk_fa_typ):
+        #         bulk_fa_linker = 'P-A-'
+        #         lyso_fa_linker_dct = {'P': '', 'A': 'P-'}  # link of the other sn after NL of this sn
+        #         fa_chk = fa_p_checker.match(bulk_fa_typ)
+        #         bulk_fa_lst = fa_chk.groups()
+        #         bulk_fa_c = bulk_fa_lst[1]
+        #         bulk_fa_db = bulk_fa_lst[3]
+        #
+        # elif _pl_typ in ['LPL', 'LPA', 'LPC', 'LPE', 'LPG', 'LPI', 'LPIP', 'LPS']:
+        #     if fa_short_checker.match(bulk_fa_typ):
+        #         bulk_fa_linker = 'A-'
+        #         lyso_fa_linker_dct = {'A': ''}
+        #         fa_chk = fa_short_checker.match(bulk_fa_typ)
+        #         bulk_fa_lst = fa_chk.groups()
+        #         bulk_fa_c = bulk_fa_lst[0]
+        #         bulk_fa_db = bulk_fa_lst[2]
+        #     elif fa_o_checker.match(bulk_fa_typ):
+        #         bulk_fa_linker = 'O-'
+        #         lyso_fa_linker_dct = {'O': ''}  # link of the other sn after NL of this sn
+        #         fa_chk = fa_o_checker.match(bulk_fa_typ)
+        #         bulk_fa_lst = fa_chk.groups()
+        #         bulk_fa_c = bulk_fa_lst[1]
+        #         bulk_fa_db = bulk_fa_lst[3]
+        #     elif fa_p_checker.match(bulk_fa_typ):
+        #         bulk_fa_linker = 'P-'
+        #         lyso_fa_linker_dct = {'P': ''}  # link of the other sn after NL of this sn
+        #         fa_chk = fa_p_checker.match(bulk_fa_typ)
+        #         bulk_fa_lst = fa_chk.groups()
+        #         bulk_fa_c = bulk_fa_lst[1]
+        #         bulk_fa_db = bulk_fa_lst[3]
+        #
+        # elif _pl_typ in ['TG']:
+        #     if fa_short_checker.match(bulk_fa_typ):
+        #         bulk_fa_linker = 'A-A-A-'
+        #         lyso_fa_linker_dct = {'A': ''}
+        #         fa_chk = fa_short_checker.match(bulk_fa_typ)
+        #         bulk_fa_lst = fa_chk.groups()
+        #         bulk_fa_c = bulk_fa_lst[0]
+        #         bulk_fa_db = bulk_fa_lst[2]
+        #     elif fa_o_checker.match(bulk_fa_typ):
+        #         bulk_fa_linker = 'O-A-A-'
+        #         lyso_fa_linker_dct = {'O': '', 'A': 'O-'}  # link of the other sn after NL of this sn
+        #         fa_chk = fa_o_checker.match(bulk_fa_typ)
+        #         bulk_fa_lst = fa_chk.groups()
+        #         bulk_fa_c = bulk_fa_lst[1]
+        #         bulk_fa_db = bulk_fa_lst[3]
+        #     elif fa_p_checker.match(bulk_fa_typ):
+        #         bulk_fa_linker = 'P-A-A-'
+        #         lyso_fa_linker_dct = {'P': '', 'A': 'P-'}  # link of the other sn after NL of this sn
+        #         fa_chk = fa_p_checker.match(bulk_fa_typ)
+        #         bulk_fa_lst = fa_chk.groups()
+        #         bulk_fa_c = bulk_fa_lst[1]
+        #         bulk_fa_db = bulk_fa_lst[3]
+        # elif _pl_typ in ['DG']:
+        #     if fa_short_checker.match(bulk_fa_typ):
+        #         bulk_fa_linker = 'A-A-'
+        #         lyso_fa_linker_dct = {'A': ''}
+        #         fa_chk = fa_short_checker.match(bulk_fa_typ)
+        #         bulk_fa_lst = fa_chk.groups()
+        #         bulk_fa_c = bulk_fa_lst[0]
+        #         bulk_fa_db = bulk_fa_lst[2]
+        #     elif fa_o_checker.match(bulk_fa_typ):
+        #         bulk_fa_linker = 'O-A-'
+        #         lyso_fa_linker_dct = {'O': '', 'A': 'O-'}  # link of the other sn after NL of this sn
+        #         fa_chk = fa_o_checker.match(bulk_fa_typ)
+        #         bulk_fa_lst = fa_chk.groups()
+        #         bulk_fa_c = bulk_fa_lst[1]
+        #         bulk_fa_db = bulk_fa_lst[3]
+        #     elif fa_p_checker.match(bulk_fa_typ):
+        #         bulk_fa_linker = 'P-A-'
+        #         lyso_fa_linker_dct = {'P': '', 'A': 'P-'}  # link of the other sn after NL of this sn
+        #         fa_chk = fa_p_checker.match(bulk_fa_typ)
+        #         bulk_fa_lst = fa_chk.groups()
+        #         bulk_fa_c = bulk_fa_lst[1]
+        #         bulk_fa_db = bulk_fa_lst[3]
 
         bulk_fa_c = int(bulk_fa_c)
         bulk_fa_db = int(bulk_fa_db)
 
-        lipid_info_dct = {'TYPE': _pl_typ, 'LINK': bulk_fa_linker, 'C': bulk_fa_c, 'DB': bulk_fa_db,
-                          'LYSO_LINK': lyso_fa_linker_dct}
+        lipid_info_dct = {'TYPE': _pl_typ, 'LINK': bulk_fa_linker, 'C': bulk_fa_c, 'DB': bulk_fa_db,}
 
         return lipid_info_dct
 
     def get_neutral_elem(self, abbr):
-
+        # FixMe: need to add for the ceramide bases (georgia: 20.2.2019)
         usr_lipid_info_dct = self.decode_abbr(abbr)
 
         lipid_type = usr_lipid_info_dct['TYPE']
+        if lipid_type in self.lipid_hg_elem_dct2.keys():
+            tmp_lipid_elem_dct = self.lipid_hg_elem_dct2[lipid_type][0].copy()
+            for k in tmp_lipid_elem_dct.keys():
+                tmp_lipid_elem_dct[k] += self.lipid_hg_elem_dct2[lipid_type][1][k]
+            tmp_lipid_elem_dct['C'] += usr_lipid_info_dct['C']
+            tmp_lipid_elem_dct['H'] += usr_lipid_info_dct['C'] * 2 - usr_lipid_info_dct['DB'] * 2
+            if usr_lipid_info_dct['LINK'] in self.link_elem_dct.keys():
+                for k in self.link_elem_dct[usr_lipid_info_dct['LINK']].keys():
+                    tmp_lipid_elem_dct[k] += self.link_elem_dct[usr_lipid_info_dct['LINK']][k]
 
-        if lipid_type in list(self.lipid_hg_elem_dct.keys()):
-            if lipid_type in ['FA']:
-                # print(abbr)
-                tmp_lipid_elem_dct = {'C': usr_lipid_info_dct['C'], 'O': 2,
-                                      'H': (usr_lipid_info_dct['C'] * 2 - usr_lipid_info_dct['DB'] * 2)}
-                if usr_lipid_info_dct['LINK'] == '':
-                    pass
-                elif usr_lipid_info_dct['LINK'] == 'O-':
-                    tmp_lipid_elem_dct['O'] += -1
-                    tmp_lipid_elem_dct['H'] += 2
-                elif usr_lipid_info_dct['LINK'] == 'P-':
-                    tmp_lipid_elem_dct['O'] += -1
-                else:
-                    pass
-
-                return tmp_lipid_elem_dct
-
-            if lipid_type in ['PA', 'PC', 'PE', 'PG', 'PI', 'PIP', 'PS']:
-                tmp_lipid_elem_dct = self.lipid_hg_elem_dct[usr_lipid_info_dct['TYPE']].copy()
-                tmp_lipid_elem_dct['O'] += 4
-                tmp_lipid_elem_dct['C'] += self.glycerol_bone_elem_dct['C'] + usr_lipid_info_dct['C']
-                tmp_lipid_elem_dct['H'] += (self.glycerol_bone_elem_dct['H'] + usr_lipid_info_dct['C'] * 2
-                                            - usr_lipid_info_dct['DB'] * 2)  # DBE = DB + 2xC=O from FA
-                if usr_lipid_info_dct['LINK'] == 'O-A-':
-                    tmp_lipid_elem_dct['O'] += -1
-                    tmp_lipid_elem_dct['H'] += 2
-                elif usr_lipid_info_dct['LINK'] == 'P-A-':
-                    tmp_lipid_elem_dct['O'] += -1
-                else:
-                    pass
-
-                return tmp_lipid_elem_dct
-
-            elif lipid_type in ['LPA', 'LPC', 'LPE', 'LPG', 'LPI', 'LPIP', 'LPS']:
-                tmp_lipid_elem_dct = self.lipid_hg_elem_dct[usr_lipid_info_dct['TYPE']].copy()
-                tmp_lipid_elem_dct['O'] += 3
-                tmp_lipid_elem_dct['C'] += self.glycerol_bone_elem_dct['C'] + usr_lipid_info_dct['C']
-                tmp_lipid_elem_dct['H'] += (self.glycerol_bone_elem_dct['H'] + 2 + usr_lipid_info_dct['C'] * 2
-                                            - usr_lipid_info_dct['DB'] * 2)  # DBE = DB + 2xC=O from FA
-
-                if usr_lipid_info_dct['LINK'] == 'O-':
-                    tmp_lipid_elem_dct['O'] += -1
-                    tmp_lipid_elem_dct['H'] += 2
-                elif usr_lipid_info_dct['LINK'] == 'P-':
-                    tmp_lipid_elem_dct['O'] += -1
-                else:
-                    pass
-
-                return tmp_lipid_elem_dct
-
-            elif lipid_type in ['TG']:
-                tmp_lipid_elem_dct = self.lipid_hg_elem_dct[usr_lipid_info_dct['TYPE']].copy()
-                tmp_lipid_elem_dct['O'] += 6
-                tmp_lipid_elem_dct['C'] += self.glycerol_bone_elem_dct['C'] + usr_lipid_info_dct['C']
-                tmp_lipid_elem_dct['H'] += (self.glycerol_bone_elem_dct['H'] + usr_lipid_info_dct['C'] * 2
-                                            - usr_lipid_info_dct['DB'] * 2)  # DBE = DB + 2xC=O from FA
-                if usr_lipid_info_dct['LINK'] == 'O-A-A-':
-                    tmp_lipid_elem_dct['O'] += -1
-                    tmp_lipid_elem_dct['H'] += 2
-                elif usr_lipid_info_dct['LINK'] == 'P-A-A-':
-                    tmp_lipid_elem_dct['O'] += -1
-                else:
-                    pass
-
-                return tmp_lipid_elem_dct
-
-            elif lipid_type in ['DG']:
-                tmp_lipid_elem_dct = self.lipid_hg_elem_dct[usr_lipid_info_dct['TYPE']].copy()
-                tmp_lipid_elem_dct['O'] += 5
-                tmp_lipid_elem_dct['C'] += self.glycerol_bone_elem_dct['C'] + usr_lipid_info_dct['C']
-                tmp_lipid_elem_dct['H'] += (
-                        self.glycerol_bone_elem_dct['H'] + usr_lipid_info_dct['C'] * 2 - usr_lipid_info_dct[
-                    'DB'] * 2 + 2)
-
-                return tmp_lipid_elem_dct
-            else:
-                return {'C': 0, 'H': 0, 'O': 0, 'P': 0}
+        # Compine: The below section was compin in the above (georgia: 14.2.2019)
+        # Delet: the below lines will be deleted
+        # if lipid_type in list(self.lipid_hg_elem_dct.keys()):
+        #     if lipid_type in ['FA']:
+        #         # print(abbr)
+        #         tmp_lipid_elem_dct = {'C': usr_lipid_info_dct['C'], 'O': 2,
+        #                               'H': (usr_lipid_info_dct['C'] * 2 - usr_lipid_info_dct['DB'] * 2)}
+        #         if usr_lipid_info_dct['LINK'] == '':
+        #             pass
+        #         elif usr_lipid_info_dct['LINK'] == 'O-':
+        #             tmp_lipid_elem_dct['O'] += -1
+        #             tmp_lipid_elem_dct['H'] += 2
+        #         elif usr_lipid_info_dct['LINK'] == 'P-':
+        #             tmp_lipid_elem_dct['O'] += -1
+        #         else:
+        #             pass
+        #
+        #         return tmp_lipid_elem_dct
+        #
+        #     if lipid_type in ['PA', 'PC', 'PE', 'PG', 'PI', 'PIP', 'PS']:
+        #         tmp_lipid_elem_dct = self.lipid_hg_elem_dct[usr_lipid_info_dct['TYPE']].copy()
+        #         tmp_lipid_elem_dct['O'] += 4
+        #         tmp_lipid_elem_dct['C'] += self.glycerol_bone_elem_dct['C'] + usr_lipid_info_dct['C']
+        #         tmp_lipid_elem_dct['H'] += (self.glycerol_bone_elem_dct['H'] + usr_lipid_info_dct['C'] * 2
+        #                                     - usr_lipid_info_dct['DB'] * 2)  # DBE = DB + 2xC=O from FA
+        #         if usr_lipid_info_dct['LINK'] == 'O-':
+        #             tmp_lipid_elem_dct['O'] += -1
+        #             tmp_lipid_elem_dct['H'] += 2
+        #         elif usr_lipid_info_dct['LINK'] == 'P-':
+        #             tmp_lipid_elem_dct['O'] += -1
+        #         else:
+        #             pass
+        #
+        #         return tmp_lipid_elem_dct
+        #
+        #     elif lipid_type in ['LPA', 'LPC', 'LPE', 'LPG', 'LPI', 'LPIP', 'LPS']:
+        #         tmp_lipid_elem_dct = self.lipid_hg_elem_dct[usr_lipid_info_dct['TYPE']].copy()
+        #         tmp_lipid_elem_dct['O'] += 3
+        #         tmp_lipid_elem_dct['C'] += self.glycerol_bone_elem_dct['C'] + usr_lipid_info_dct['C']
+        #         tmp_lipid_elem_dct['H'] += (self.glycerol_bone_elem_dct['H'] + 2 + usr_lipid_info_dct['C'] * 2
+        #                                     - usr_lipid_info_dct['DB'] * 2)  # DBE = DB + 2xC=O from FA
+        #
+        #         if usr_lipid_info_dct['LINK'] == 'O-':
+        #             tmp_lipid_elem_dct['O'] += -1
+        #             tmp_lipid_elem_dct['H'] += 2
+        #         elif usr_lipid_info_dct['LINK'] == 'P-':
+        #             tmp_lipid_elem_dct['O'] += -1
+        #         else:
+        #             pass
+        #
+        #         return tmp_lipid_elem_dct
+        #
+        #     elif lipid_type in ['TG']:
+        #         tmp_lipid_elem_dct = self.lipid_hg_elem_dct[usr_lipid_info_dct['TYPE']].copy()
+        #         tmp_lipid_elem_dct['O'] += 6
+        #         tmp_lipid_elem_dct['C'] += self.glycerol_bone_elem_dct['C'] + usr_lipid_info_dct['C']
+        #         tmp_lipid_elem_dct['H'] += (self.glycerol_bone_elem_dct['H'] + usr_lipid_info_dct['C'] * 2
+        #                                     - usr_lipid_info_dct['DB'] * 2)  # DBE = DB + 2xC=O from FA
+        #         if usr_lipid_info_dct['LINK'] == 'O-':
+        #             tmp_lipid_elem_dct['O'] += -1
+        #             tmp_lipid_elem_dct['H'] += 2
+        #         elif usr_lipid_info_dct['LINK'] == 'P-':
+        #             tmp_lipid_elem_dct['O'] += -1
+        #         else:
+        #             pass
+        #
+        #         return tmp_lipid_elem_dct
+        #
+        #     elif lipid_type in ['DG']:
+        #         tmp_lipid_elem_dct = self.lipid_hg_elem_dct[usr_lipid_info_dct['TYPE']].copy()
+        #         tmp_lipid_elem_dct['O'] += 5
+        #         tmp_lipid_elem_dct['C'] += self.glycerol_bone_elem_dct['C'] + usr_lipid_info_dct['C']
+        #         tmp_lipid_elem_dct['H'] += (
+        #                 self.glycerol_bone_elem_dct['H'] + usr_lipid_info_dct['C'] * 2 - usr_lipid_info_dct[
+        #             'DB'] * 2 + 2)
+        #         if usr_lipid_info_dct['LINK'] == 'O-A-':
+        #             tmp_lipid_elem_dct['O'] += -1
+        #             tmp_lipid_elem_dct['H'] += 2
+        #         elif usr_lipid_info_dct['LINK'] == 'P-A-':
+        #             tmp_lipid_elem_dct['O'] += -1
+        #         else:
+        #             pass
+        #
+        #     else:
+        #         return {'C': 0, 'H': 0, 'O': 0, 'P': 0}
         else:
-            return {'C': 0, 'H': 0, 'O': 0, 'P': 0}
+            tmp_lipid_elem_dct = self.gen_hg_elem
+        return tmp_lipid_elem_dct
 
     def get_charged_elem(self, abbr, charge='[M-H]-'):
 
         lipid_elem_dct = self.get_neutral_elem(abbr)
-        if charge == '[M-H]-':
-            lipid_elem_dct['H'] += -1
-        elif charge == '[M+HCOO]-' or charge == '[M+FA-H]-':
-            lipid_elem_dct['H'] += 1
-            lipid_elem_dct['C'] += 1
-            lipid_elem_dct['O'] += 2
-        elif charge == '[M+CH3COO]-':
-            lipid_elem_dct['H'] += 3
-            lipid_elem_dct['C'] += 2
-            lipid_elem_dct['O'] += 2
-        elif charge == '[M+OAc]-':
-            lipid_elem_dct['H'] += 3
-            lipid_elem_dct['C'] += 2
-            lipid_elem_dct['O'] += 2
-        elif charge == '[M+H]+':
-            lipid_elem_dct['H'] += 1
-        elif charge == '[M+NH4]+':
-            if 'N' in list(lipid_elem_dct.keys()):
-                lipid_elem_dct['N'] += 1
-            else:
-                lipid_elem_dct['N'] = 1
-            lipid_elem_dct['H'] += 4
-        elif charge == '[M+Na]+':
-            lipid_elem_dct['Na'] = 1
+        if charge in self.ion_mode_elem.keys():
+            for k in self.ion_mode_elem[charge][0].keys():
+                lipid_elem_dct[k] += self.ion_mode_elem[charge][0][k]
+
+        # if charge == '[M-H]-':
+        #     lipid_elem_dct['H'] += -1
+        # elif charge == '[M+HCOO]-' or charge == '[M+FA-H]-':
+        #     lipid_elem_dct['H'] += 1
+        #     lipid_elem_dct['C'] += 1
+        #     lipid_elem_dct['O'] += 2
+        # elif charge == '[M+CH3COO]-':
+        #     lipid_elem_dct['H'] += 3
+        #     lipid_elem_dct['C'] += 2
+        #     lipid_elem_dct['O'] += 2
+        # elif charge == '[M+OAc]-':
+        #     lipid_elem_dct['H'] += 3
+        #     lipid_elem_dct['C'] += 2
+        #     lipid_elem_dct['O'] += 2
+        # elif charge == '[M+H]+':
+        #     lipid_elem_dct['H'] += 1
+        # elif charge == '[M+NH4]+':
+        #     if 'N' in list(lipid_elem_dct.keys()):
+        #         lipid_elem_dct['N'] += 1
+        #     else:
+        #         lipid_elem_dct['N'] = 1
+        #     lipid_elem_dct['H'] += 4
+        # elif charge == '[M+Na]+':
+        #     lipid_elem_dct['Na'] = 1
 
         return lipid_elem_dct
 
@@ -381,45 +472,55 @@ class ElemCalc:
         else:
             elem_dct = self.get_charged_elem(abbr, charge=charge)
 
-        formula_str = 'C{c}H{h}'.format(c=elem_dct['C'], h=elem_dct['H'])
+        formula_str = ''
+        for k in elem_dct.keys():
+            if elem_dct[k] == 1:
+                formula_str += k
+            elif elem_dct[k] > 1:
+                formula_str += '{el}{el_n}'.format(el=k, el_n=elem_dct[k])
+        if charge not in ['Neutral', 'neutral', '', None]:
+            formula_str += self.ion_mode_elem[charge][1]
 
-        if 'N' in list(elem_dct.keys()):
-            if elem_dct['N'] == 1:
-                formula_str += 'N'
-            elif elem_dct['N'] > 1:
-                formula_str += 'N%i' % elem_dct['N']
 
-        if 'O' in list(elem_dct.keys()):
-            if elem_dct['O'] == 1:
-                formula_str += 'O'
-            elif elem_dct['O'] > 1:
-                formula_str += 'O%i' % elem_dct['O']
-
-        if 'P' in list(elem_dct.keys()):
-            if elem_dct['P'] == 1:
-                formula_str += 'P'
-            elif elem_dct['P'] > 1:
-                formula_str += 'P%i' % elem_dct['P']
-
-        if 'Na' in list(elem_dct.keys()):
-            if elem_dct['Na'] == 1:
-                formula_str += 'Na'
-            elif elem_dct['Na'] > 1:
-                formula_str += 'Na%i' % elem_dct['Na']
-
-        if 'K' in list(elem_dct.keys()):
-            if elem_dct['K'] == 1:
-                formula_str += 'K'
-            elif elem_dct['K'] > 1:
-                formula_str += 'K%i' % elem_dct['K']
-
-        if charge in ['neutral', 'Neutral', '', None]:
-            pass
-        elif charge in ['[M-H]-', '[M+HCOO]-']:
-            formula_str += '-'
-        elif charge in ['[M+H]+', '[M+NH4]+', '[M+Na]+']:
-            formula_str += '+'
-        # print ('lets see if you manage to get out from this one')
+        # formula_str = 'C{c}H{h}'.format(c=elem_dct['C'], h=elem_dct['H'])
+        #
+        # if 'N' in list(elem_dct.keys()):
+        #     if elem_dct['N'] == 1:
+        #         formula_str += 'N'
+        #     elif elem_dct['N'] > 1:
+        #         formula_str += 'N%i' % elem_dct['N']
+        #
+        # if 'O' in list(elem_dct.keys()):
+        #     if elem_dct['O'] == 1:
+        #         formula_str += 'O'
+        #     elif elem_dct['O'] > 1:
+        #         formula_str += 'O%i' % elem_dct['O']
+        #
+        # if 'P' in list(elem_dct.keys()):
+        #     if elem_dct['P'] == 1:
+        #         formula_str += 'P'
+        #     elif elem_dct['P'] > 1:
+        #         formula_str += 'P%i' % elem_dct['P']
+        #
+        # if 'Na' in list(elem_dct.keys()):
+        #     if elem_dct['Na'] == 1:
+        #         formula_str += 'Na'
+        #     elif elem_dct['Na'] > 1:
+        #         formula_str += 'Na%i' % elem_dct['Na']
+        #
+        # if 'K' in list(elem_dct.keys()):
+        #     if elem_dct['K'] == 1:
+        #         formula_str += 'K'
+        #     elif elem_dct['K'] > 1:
+        #         formula_str += 'K%i' % elem_dct['K']
+        #
+        # if charge in ['neutral', 'Neutral', '', None]:
+        #     pass
+        # elif charge in ['[M-H]-', '[M+HCOO]-']:
+        #     formula_str += '-'
+        # elif charge in ['[M+H]+', '[M+NH4]+', '[M+Na]+']:
+        #     formula_str += '+'
+        # # print ('lets see if you manage to get out from this one')
         return formula_str, elem_dct
 
     def get_exactmass(self, elem_dct):
@@ -509,15 +610,20 @@ class ElemCalc:
 if __name__ == '__main__':
 
     usr_bulk_abbr_lst = [
-        # 'TG(P-48:2)',
-        # 'PC(O-36:3)',
-        # 'PC(P-36:3)',
+        # 'TG(48:2)',
+        # 'PC(O-34:0)',
         # 'PC(36:3)',
-        'LPC(20:3)'
+        # 'TG(P-48:2)',
+        # 'LPC(20:3)',
+        # '35:3'
+        # 'Cer(d34:0)',
+        't10:0',
+        # 'FA10:0'
     ]
-    charge_lst = ['[M+NH4]+', '[M-H]-', '[M+HCOO]-', '[M+OAc]-']
+    # charge_lst = ['[M+NH4]+', '[M-H]-', '[M+HCOO]-', '[M+OAc]-']
     # usr_bulk_abbr_lst = ['PC(36:3)', 'PC(O-36:3)', 'PC(P-36:3)']
     # charge_lst = ['', '[M-H]-', '[M+HCOO]-', '[M+OAc]-']
+    charge_lst = ['', '[M+H]+', '[M+NH4]+']
 
     abbr2formula = ElemCalc()
 

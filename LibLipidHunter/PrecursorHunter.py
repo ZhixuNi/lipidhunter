@@ -151,6 +151,8 @@ class PrecursorHunter(object):
 
         ms1_obs_pr_df = pd.DataFrame()
         # print('ms1_obs_pr_df')
+        # Question: what is the reason of the below section since looks exactly the same thing for all
+        # Question: why it is matter if it is PC or not (georgia: 14.2.2019)
         if not self.lpp_info_df.empty:
             if pl_class == 'PC':
                 if usr_charge in ['[M+HCOO]-', '[M+CH3COO]-']:
@@ -180,9 +182,10 @@ class PrecursorHunter(object):
         else:
             # no matched info --> exit
             return False, False
-
+        # print(self.lpp_info_df.iloc[0])
         # Prepare for multiprocessing
         lpp_info_groups = self.lpp_info_df.groupby(['Lib_mz', 'Formula'])
+
         # TODO (georgia.angelidou@uni-leipzig.de): can also be reduced
         all_group_key_lst = list(lpp_info_groups.groups.keys())
         sub_len = int(math.ceil(len(all_group_key_lst) / core_num))
@@ -340,7 +343,8 @@ class PrecursorHunter(object):
             ms1_obs_pr_df = ms1_obs_pr_df.sort_values(by=['Lib_mz', 'abs_ppm'], ascending=[True, True])
             ms1_obs_pr_df = ms1_obs_pr_df.reset_index(drop=True)
             # TODO (georgia.angelidou@uni-leipzig.de): Remove the second parameter that the program returns
-            # return ms1_obs_pr_df, opt_sub_pl_group_lst
+            # return ms1_obs_pr_df, opt_sub_pl_group_lst.
+
             return ms1_obs_pr_df
 
         else:

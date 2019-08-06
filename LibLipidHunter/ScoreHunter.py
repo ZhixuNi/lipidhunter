@@ -512,6 +512,7 @@ def calc_rankscore(obs_dct, lite_info_df, lipid_class, weight_dct, rankscore_fil
 
 def get_rankscore(fa_df, master_info_df, abbr_bulk, charge, ms2_df, _ms2_idx, lipid_class, weight_dct, core_count,
                   rankscore_filter=27.5, all_sn=True):
+    # Question: Why we do not move this query before entering the function (georgia: 14.2.2019)
     lite_info_df = master_info_df.query('BULK_ABBR == "%s" and spec_index == %f' % (abbr_bulk, _ms2_idx))
 
     lite_info_df.is_copy = False
@@ -520,6 +521,7 @@ def get_rankscore(fa_df, master_info_df, abbr_bulk, charge, ms2_df, _ms2_idx, li
     obs_dct = {}
     frag_lst_dg = []
     frag_lst_dg_w = []
+    # Note: already define in the LipidNomenclature self.lipid_mode_dct
     if lipid_class in ['PA', 'PE', 'PG', 'PI', 'PS'] and charge == '[M-H]-':
         frag_lst = ['[L%s-H]-' % lipid_class, '[L%s-H2O-H]-' % lipid_class]
         frag_lst_fa = ['[FA-H]-']
@@ -598,7 +600,7 @@ def get_rankscore(fa_df, master_info_df, abbr_bulk, charge, ms2_df, _ms2_idx, li
         obs_fa_nl_df = pd.DataFrame()
     obs_dg_frag_df = pd.DataFrame()
     obs_dg_w_frag_df = pd.DataFrame()
-
+    # Note: Try to combine it with the dct in the LipidNomenclature self.lipid_mode_dct (georgia: 14.2.2019)
     if lipid_class in ['PA', 'PE', 'PG', 'PI', 'PS', 'PC']:
         if not obs_fa_frag_df.empty or not obs_fa_nl_df.empty:
             if charge == '[M-H]-':
@@ -791,6 +793,7 @@ def get_lipid_info(param_dct, fa_df, checked_info_df, checked_info_groups, core_
         _usr_abbr_bulk_lst = list(set(_subgroup_df['BULK_ABBR'].values.tolist()))
         # TODO (georgia.angelidou@uni-leipzig.de): Here should be the control for the ms values to avoid problems
         usr_spec_info_dct = core_spec_dct[group_key]
+        # Note: in the current table there is also another coloumn with the formula info (Formula) (georgia: 14.2.2019)
         key_type = '%s_FORMULA' % _subgroup_df['Ion'].iloc[0]
         _samemz_se = _subgroup_df.loc[:, _subgroup_df.columns.isin(
             list(('scan_time', 'DDA_rank', 'scan_number', 'Lib_mz', 'FORMULA', 'Ion', key_type, 'Lib_mz', 'MS1_XIC_mz',
@@ -802,6 +805,7 @@ def get_lipid_info(param_dct, fa_df, checked_info_df, checked_info_groups, core_
         _usr_mz_lib = _samemz_se['Lib_mz']
         _usr_formula = _samemz_se['FORMULA']
         _usr_charge = _samemz_se['Ion']
+        # Note: replace '%s_FORMULA' % _usr_charge with key_type (georgia: 14.2.2019)
         _usr_formula_charged = _samemz_se['%s_FORMULA' % _usr_charge]
         _usr_ms2_pr_mz = _samemz_se['Lib_mz']
         _obs_ms2_pr_mz = _samemz_se['MS2_PR_mz']
@@ -940,7 +944,9 @@ def get_lipid_info(param_dct, fa_df, checked_info_df, checked_info_groups, core_
                                                                       rankscore_filter=usr_rankscore_filter,
                                                                       all_sn=usr_tag_all_sn)
                         if matched_checker > 0:
+                            # Note: we can replace the obs_info_df and not replace it and use the original abbreviation (georgia: 14.2.2019)
                             obs_info_df = obs_info_dct['INFO']
+                            print (obs_info_df.iloc[0])
                             rank_score = obs_info_df['RANK_SCORE'].values.tolist()
                         else:
                             obs_info_dct = {}
@@ -1006,14 +1012,17 @@ def get_lipid_info(param_dct, fa_df, checked_info_df, checked_info_groups, core_
                         obs_info_df['Charge'] = _usr_charge
                         obs_info_df['MS1_obs_mz'] = _ms1_pr_mz
                         obs_info_df['MS1_obs_i'] = '%.2e' % float(_ms1_pr_i)
+                        # Note: it is already present in the dataframe (georgia: 15.2.2019)
                         obs_info_df['Lib_mz'] = _usr_mz_lib
                         obs_info_df['MS2_scan_time'] = _usr_ms2_rt
                         obs_info_df['DDA#'] = _usr_ms2_dda_rank
+                        # Note: it is already present in the dataframe (georgia: 15.2.2019)
                         obs_info_df['MS2_PR_mz'] = _obs_ms2_pr_mz
                         obs_info_df['Scan#'] = _usr_ms2_scan_id
                         obs_info_df['ISOTOPE_SCORE'] = isotope_score
                         obs_info_df['#Specific_peaks'] = specific_ion_count
                         obs_info_df['#Unspecific_peaks'] = unspecific_ion_count
+                        # Note: there is already a column with this name (georgia: 15.2.2019)
                         obs_info_df['ppm'] = _exact_ppm
                         obs_info_df['img_name'] = img_name_core[1:]
 
@@ -1021,6 +1030,7 @@ def get_lipid_info(param_dct, fa_df, checked_info_df, checked_info_groups, core_
                         usr_spec_info_dct['ms1_i'] = isotope_score_info_dct['obs_pr_i']
 
                         tmp_df = tmp_df.append(obs_info_df)
+                        print (obs_info_df.iloc[0])
                         if save_fig is True:
                             img_param_dct = {'abbr': _usr_abbr_bulk, 'mz_se': _samemz_se, 'xic_dct': xic_dct,
                                              'ident_info_dct': obs_info_dct, 'spec_info_dct': usr_spec_info_dct,

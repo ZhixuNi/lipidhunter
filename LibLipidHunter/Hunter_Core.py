@@ -33,6 +33,8 @@ import time
 
 from numpy import int64
 import pandas as pd
+pd.set_option('display.max_columns', 200)
+pd.set_option('display.max_rows', 200)
 
 try:
     from LibLipidHunter.LipidComposer import LipidComposer
@@ -241,8 +243,12 @@ def huntlipids(param_dct, error_lst, save_fig=True):
 
     # cut lib info to the user defined m/z range
     # TODO (georgia.angelidou@uni-leipzig.de): support for the sphingomyelins and ceramides
+
+    # print (lipid_info_df.iloc[0])
     pos_charge_lst = ['[M+H]+', '[M+Na]+', '[M+NH4]+']
     neg_charge_lst = ['[M-H]-', '[M+HCOO]-', '[M+CH3COO]-']
+    print (lipid_info_df.iloc[0])
+    # Change: can put directly the usr_charge -> lipid_info_df[usr_charge]
     if usr_charge in neg_charge_lst:
         if usr_lipid_class in ['PC', 'LPC']:
             if usr_charge == '[M+HCOO]-':
@@ -303,6 +309,8 @@ def huntlipids(param_dct, error_lst, save_fig=True):
     print('[INFO] --> MS1_XIC_df.shape', ms1_xic_df.shape)
     # TODO (georgia.angelidou@uni-leipzig.de): remove the second variable that pr_hunter is returns since it is not used
     # in this case sub_pl_group_lst
+    # Change: ms1_obs_pr_df will be replace with the lipid_info_df. (georgia: 14.2.2019)
+    # Note: instead of create a new function is better to used the existing one and replace it since it is not used for further perposes (georgia: 14.2.2019)
     ms1_obs_pr_df = pr_hunter.get_matched_pr(usr_scan_info_df, usr_spectra_pl, ms1_max=usr_ms1_max,
                                                                core_num=usr_core_num, max_ram=usr_max_ram)
 
@@ -329,8 +337,10 @@ def huntlipids(param_dct, error_lst, save_fig=True):
     usr_scan_checker_lst = usr_scan_info_df['scan_checker'].tolist()    # line can be removed not necessary
     # TODO (georgia.angelidou@uni-leipzig.de): the line below will change to the following:
     # checked_info_df = ms1_obs_pr_df[ms1_obs_pr_df['scan_checker'].isin(usr_scan_info_df['scan_checker'].tolist()st)]
+    # Note: can replace the original ms1_obs_pr_df (georgia: 14.2.2019)
     checked_info_df = ms1_obs_pr_df[ms1_obs_pr_df['scan_checker'].isin(usr_scan_checker_lst)]
     # del usr_scan_checker_lst
+
     checked_info_df.is_copy = False
     checked_info_df.sort_values(by=['scan_checker', 'Lib_mz'], ascending=[True, True], inplace=True)
     # TODO (georgia.angelidou@uni-leipzig.de): remove if not needed
@@ -346,7 +356,7 @@ def huntlipids(param_dct, error_lst, save_fig=True):
         return False, error_lst, False
     else:
         print('[INFO] --> features identified in the pre-match: ', checked_info_df.shape[0])
-
+    # Note: move higher line before separate the ms1_obs_pr_df with the checked_info_df to avoid any errors (georgia: 14.2.2019)
     ms1_xic_mz_lst = ms1_obs_pr_df['MS1_XIC_mz'].values.tolist()
     # del ms1_obs_pr_df
     ms1_xic_mz_lst = sorted(set(ms1_xic_mz_lst))
@@ -689,11 +699,13 @@ def huntlipids(param_dct, error_lst, save_fig=True):
     # print('spec_key_num', spec_key_num)
 
     # parse specific peak info
+    # Note: maybe it can be combine in the future but for now can also stay like this (georgia: 14.2.2019)
     pl_class_lst = ['PA', 'PC', 'PE', 'PG', 'PI', 'PS', 'PIP']
     lpl_class_lst = ['LPA', 'LPC', 'LPE', 'LPG', 'LPI', 'LPS', 'LPIP']
     pl_neg_chg_lst = ['[M-H]-', '[M+HCOO]-', '[M+CH3COO]-']
     tg_class_lst = ['TG', 'DG']
     tg_pos_chg_lst = ['[M+NH4]+', '[M+H]+', '[M+Na]+']
+    # Change: will be combine in one. Doesn't need to have if statement (georgia:14.2.2019)
     if usr_lipid_class in pl_class_lst and usr_charge in pl_neg_chg_lst:
         charge_mode = 'NEG'
         usr_key_frag_df = pd.read_excel(key_frag_cfg)
@@ -1077,6 +1089,8 @@ def huntlipids(param_dct, error_lst, save_fig=True):
         except KeyError:
             pass
         output_df.reset_index(drop=True, inplace=True)
+        print (output_df.iloc[0])
+        print (output_df.shape[0])
         output_df.index += 1
         # print('output_df')
         # print(output_df.head(5))
@@ -1337,13 +1351,13 @@ if __name__ == '__main__':
         # ['PC', 'waters', '[M+HCOO]-', 'PC_waters'],
         # ['PE', 'waters', '[M-H]-', 'PE_waters'],
         # ['TG', 'waters', '[M+H]+', 'TG_waters'],
-        # ['TG', 'waters', '[M+NH4]+', 'TG_waters_NH4'],
+        ['TG', 'thermo', '[M+NH4]+', 'TG_thermo_NH4'],
         # ['TG', 'waters', '[M+Na]+', 'TG_waters_Na'],
         # ['TG', 'thermo', '[M+NH4]+', 'TG_thermo_NH4'],
         # ['DG', 'thermo', '[M+NH4]+', 'DG_thermo_NH4'],
         # ['DG', 'agilent', '[M+NH4]+', 'TG_agilent_NH4'],
         # ['LPC', 'thermo', '[M+HCOO]-', 'LPC_thermo'],
-        ['LPE', 'thermo', '[M-H]-', 'LPE_thermo'],
+        # ['LPE', 'thermo', '[M-H]-', 'LPE_thermo'],
         # ['LPA', 'thermo', '[M-H]-', 'LPA_thermo'],
         # ['LPG', 'thermo', '[M-H]-', 'LPG_thermo'],
         # ['LPS', 'thermo', '[M-H]-', 'LPS_thermo'],
@@ -1351,13 +1365,13 @@ if __name__ == '__main__':
     ]
 
     # set the default files
-    pl_mzml_waters = r'../Test/mzML/PL_neg_waters_synapt-g2si.mzML'  # Synapt-g2si file
-    lpl_mzml_thermo = r'../Test/mzML/Qexactive_Neg.mzML'  # Qexactive file
-    tg_mzml_waters = r'../Test/mzML/TG_pos_waters_synapt-g2si.mzML'  # Synapt-g2si file
-    tg_mzml_thermo = r'../Test/mzML/QE_18_42_AT_SIR1_1_0,00025_pos_DDA.mzML'  # Qexactive file
+    # pl_mzml_waters = r'../Test/mzML/PL_neg_waters_synapt-g2si.mzML'  # Synapt-g2si file
+    # lpl_mzml_thermo = r'../Test/mzML/Qexactive_Neg.mzML'  # Qexactive file
+    # tg_mzml_waters = r'../Test/mzML/TG_pos_waters_synapt-g2si.mzML'  # Synapt-g2si file
+    tg_mzml_thermo = r'D:/Georgia/PhD/2018/LipidHunter/AllRun/Angela/C30Prototype/MS2/NewPW/C30prototype.mzML'  # Qexactive file
     # tg_mzml_thermo = r'../Test/mzML/TG_pos_thermo_Qexactive.mzML'  # Qexactive file
-    tg_mzml_SCIEXS = r'../Test/mzML/Test_sciex.mzML'  # position holder
-    tg_mzml_agilent = r'../Test/mzML/Test_agilent.mzML'  # position holder
+    # tg_mzml_SCIEXS = r'../Test/mzML/Test_sciex.mzML'  # position holder
+    # tg_mzml_agilent = r'../Test/mzML/Test_agilent.mzML'  # position holder
 
     pl_base_dct = {'fawhitelist_path_str': r'../ConfigurationFiles/1-FA_Whitelist_PL.xlsx',
                    'lipid_specific_cfg': r'../ConfigurationFiles/3-Specific_ions.xlsx',
@@ -1367,7 +1381,7 @@ if __name__ == '__main__':
                    'lipid_specific_cfg': r'../ConfigurationFiles/3-Specific_ions.xlsx',
                    'score_cfg': r'../ConfigurationFiles/2-Score_weight_LPL.xlsx'}
 
-    tg_base_dct = {'fawhitelist_path_str': r'../ConfigurationFiles/1-FA_Whitelist_TG-DG.xlsx',
+    tg_base_dct = {'fawhitelist_path_str': r'C:/Users/g.angelidou/Desktop/hunter/LipidHunter_x64/LipidHunter_x64/ConfigurationFiles/1-FA_Whitelist_TG-DG.xlsx',
                    'lipid_specific_cfg': r'../ConfigurationFiles/3-Specific_ions.xlsx',
                    'score_cfg': r'../ConfigurationFiles/2-Score_weight_TG.xlsx'}
 
@@ -1408,8 +1422,8 @@ if __name__ == '__main__':
                 rt_range = [24, 27]  # max [24, 27]
             elif vendor == 'thermo':
                 mzml = lpl_mzml_thermo
-                mz_range = [300, 900]  # 600, 1000 short 800 - 840
-                rt_range = [3, 10]  # [20, 28] short [24, 26]
+                mz_range = [300, 900]
+                rt_range = [3, 10]
             else:
                 mzml = False
                 pass
@@ -1490,8 +1504,8 @@ if __name__ == '__main__':
 
             elif vendor == 'thermo':
                 _cfg_dct['ms_ppm'] = 10
-                _cfg_dct['ms2_ppm'] = 50
-                _cfg_dct['ms_th'] = 500
+                _cfg_dct['ms2_ppm'] = 20
+                _cfg_dct['ms_th'] = 100000
                 _cfg_dct['ms2_th'] = 50
                 _cfg_dct['dda_top'] = 30  # 10
 
