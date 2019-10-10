@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2016-2017  SysMedOs_team @ AG Bioanalytik, University of Leipzig:
+# Copyright (C) 2016-2019  SysMedOs_team @ AG Bioanalytik, University of Leipzig:
 # SysMedOs_team: Zhixu Ni, Georgia Angelidou, Mike Lange, Maria Fedorova
 # LipidHunter is Dual-licensed
 #     For academic and non-commercial use: `GPLv2 License` Please read more information by the following link:
@@ -14,12 +14,8 @@
 # DOI: 10.1021/acs.analchem.7b01126
 #
 # For more info please contact:
-#     SysMedOs_team: oxlpp@bbz.uni-leipzig.de
 #     Developer Zhixu Ni zhixu.ni@uni-leipzig.de
 #     Developer Georgia Angelidou georgia.angelidou@uni-leipzig.de
-
-from __future__ import division
-from __future__ import print_function
 
 import glob
 import multiprocessing
@@ -31,28 +27,46 @@ import time
 
 import pandas as pd
 from PySide import QtCore, QtGui
-from six.moves import configparser
+import configparser
 
-try:
-    from LibLipidHunter.LipidHunter_UI import Ui_MainWindow
-    from LibLipidHunter.Hunter_Core import huntlipids
-    from LibLipidHunter.LipidComposer import LipidComposer
-except ImportError:  # for python 2.7.14
-    from LipidHunter_UI import Ui_MainWindow
-    from Hunter_Core import huntlipids
-    from LipidComposer import LipidComposer
+from LibLipidHunter.LipidHunter_UI import Ui_MainWindow
+from LibLipidHunter.Hunter_Core import huntlipids
+from LibLipidHunter.LipidComposer import LipidComposer
 
 
 class LipidHunterMain(QtGui.QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None, cwd=None):
+        scale = 1
+        config = configparser.ConfigParser()
+        config.read('config.ini')
+        if config.has_section('settings'):
+            user_cfg = 'settings'
+        else:
+            if config.has_section('default'):
+                user_cfg = 'default'
+            else:
+                user_cfg = ''
+        if len(user_cfg) > 2:
+            options = config.options(user_cfg)
+            if 'gui_scale' in options:
+                try:
+                    scale = float(config.get(user_cfg, 'gui_scale'))
+                except (ValueError, TypeError):
+                    pass
+        if scale != 1:
+            if scale > 2.75:
+                scale = 2.75
+            elif scale < 0.75:
+                scale = 0.75
+            print('[INFO] Using GUI scale x{0}'.format(scale))
         QtGui.QMainWindow.__init__(self, parent)
         self.ui = Ui_MainWindow()
-        self.ui.setupUi(self)
+        self.ui.setupUi(self, scale=scale)
 
         # set version
-        version_date = r'16, October, 2018'
+        version_date = r'06, August, 2019'
         version_html = (r'<html><head/><body><p><span style=" font-weight:600;">'
-                        r'LipidHunter 2 (Beta) # Released Date: {version_date}'
+                        r'LipidHunter 2 (RC2) # Released Date: {version_date}'
                         r'</span></p></body></html>').format(version_date=version_date)
         self.ui.version_lb.setText(QtGui.QApplication.translate("MainWindow", version_html, None,
                                                                 QtGui.QApplication.UnicodeUTF8))
@@ -129,6 +143,8 @@ class LipidHunterMain(QtGui.QMainWindow, Ui_MainWindow):
         # slots for tab a
         QtCore.QObject.connect(self.ui.tab_a_lipidclass_cmb, QtCore.SIGNAL("currentIndexChanged(const QString&)"),
                                self.a_lipid_class_fa_list)
+        QtCore.QObject.connect(self.ui.mode_lcms_rb, QtCore.SIGNAL("clicked()"), self.a_set_lc_mode)
+        QtCore.QObject.connect(self.ui.mode_static_rb, QtCore.SIGNAL("clicked()"), self.a_set_static_mode)
         QtCore.QObject.connect(self.ui.tab_a_loadfalist_pb, QtCore.SIGNAL("clicked()"), self.a_load_xlsx)
         QtCore.QObject.connect(self.ui.tab_a_loadscorecfg_pb, QtCore.SIGNAL("clicked()"), self.a_loadscore_xlsx)
         # QtCore.QObject.connect(self.ui.tab_a_launchgen_pb, QtCore.SIGNAL("clicked()"), self.a_go_generator)
@@ -189,13 +205,6 @@ class LipidHunterMain(QtGui.QMainWindow, Ui_MainWindow):
                     self.ui.tab_c_falistpl_le.setText(error_log)
                 else:
                     self.ui.tab_c_falistpl_le.setText(pl_fawhitelist_path_str)
-            if 'fa_white_list_cfg_tg' in options:
-                tg_fawhitelist_path_str = config.get(user_cfg, 'fa_white_list_cfg_tg')
-                tg_fawhitelist_path_str, error_log = self.check_file(tg_fawhitelist_path_str, 'FA whitelist for TG/DG')
-                if error_log is not None:
-                    self.ui.tab_c_falisttg_le.setText(error_log)
-                else:
-                    self.ui.tab_c_falisttg_le.setText(tg_fawhitelist_path_str)
             if 'lipid_specific_cfg' in options:
                 lipid_specific_path_str = config.get(user_cfg, 'lipid_specific_cfg')
                 lipid_specific_path_str, error_log = self.check_file(lipid_specific_path_str, 'lipid_specific_cfg')
@@ -203,6 +212,13 @@ class LipidHunterMain(QtGui.QMainWindow, Ui_MainWindow):
                     self.ui.tab_c_hgcfg_le.setText(error_log)
                 else:
                     self.ui.tab_c_hgcfg_le.setText(lipid_specific_path_str)
+            if 'score_cfg_lpl' in options:
+                lpl_score_cfg_path_str = config.get(user_cfg, 'score_cfg_lpl')
+                lpl_score_cfg_path_str, error_log = self.check_file(lpl_score_cfg_path_str, 'Score cfg for LPL')
+                if error_log is not None:
+                    self.ui.tab_c_falisttg_le.setText(error_log)
+                else:
+                    self.ui.tab_c_falisttg_le.setText(lpl_score_cfg_path_str)
             if 'score_cfg_pl' in options:
                 self.ui.tab_c_scorecfgpl_le.setText(config.get(user_cfg, 'score_cfg_pl'))
                 pl_score_cfg_path_str = config.get(user_cfg, 'score_cfg_pl')
@@ -424,6 +440,14 @@ class LipidHunterMain(QtGui.QMainWindow, Ui_MainWindow):
             self.ui.tab_a_msmax_spb.hide()
             self.ui.tab_a_msmax_spb.setValue(0)
 
+    def a_set_lc_mode(self):
+        self.ui.tab_a_rtstart_dspb.setValue(10.0)
+        self.ui.tab_a_rtend_dspb.setValue(25.0)
+
+    def a_set_static_mode(self):
+        self.ui.tab_a_rtstart_dspb.setValue(0.1)
+        self.ui.tab_a_rtend_dspb.setValue(15.0)
+
     def a_lipid_class_fa_list(self):
         _lipid_class_info = str(self.ui.tab_a_lipidclass_cmb.currentText())
         lipid_class_checker = re.compile(r'(.*)( [(])(\w{2,3})([)] )(.*)')
@@ -438,7 +462,7 @@ class LipidHunterMain(QtGui.QMainWindow, Ui_MainWindow):
             _lipid_charge = ''
 
         pl_fa_cfg = self.ui.tab_c_falistpl_le.text()
-        tg_fa_cfg = self.ui.tab_c_falisttg_le.text()
+        lpl_score_cfg = self.ui.tab_c_falisttg_le.text()
         pl_score_cfg = self.ui.tab_c_scorecfgpl_le.text()
         tg_score_cfg = self.ui.tab_c_scorecfgtg_le.text()
         dg_score_cfg = self.ui.tab_c_scorecfgdg_le.text()
@@ -450,17 +474,49 @@ class LipidHunterMain(QtGui.QMainWindow, Ui_MainWindow):
             self.ui.tab_a_loadfalist_le.setText(pl_fa_cfg)
             # if usr_score_cfg in ['', dg_score_cfg, tg_score_cfg]:
             self.ui.tab_a_loadscorecfg_le.setText(pl_score_cfg)
+            self.ui.tab_a_mzstart_dspb.setValue(600)
+            self.ui.tab_a_mzend_dspb.setValue(1000)
+            self.ui.tab_a_score_spb.setValue(40)
+            if self.ui.mode_lcms_rb.isChecked():
+                self.ui.tab_a_rtstart_dspb.setValue(10.0)
+                self.ui.tab_a_rtend_dspb.setValue(25.0)
+        elif _lipid_class in ['LPA', 'LPC', 'LPE', 'LPG', 'LPI', 'LPIP', 'LPS']:
+            # if usr_fa_cfg in ['', tg_fa_cfg]:
+            self.ui.tab_a_loadfalist_le.setText(pl_fa_cfg)
+            # if usr_score_cfg in ['', dg_score_cfg, tg_score_cfg]:
+            self.ui.tab_a_loadscorecfg_le.setText(lpl_score_cfg)
+            self.ui.tab_a_mzstart_dspb.setValue(300)
+            self.ui.tab_a_mzend_dspb.setValue(800)
+            self.ui.tab_a_score_spb.setValue(25)
+            if self.ui.mode_lcms_rb.isChecked():
+                self.ui.tab_a_rtstart_dspb.setValue(3.0)
+                self.ui.tab_a_rtend_dspb.setValue(15.0)
         elif _lipid_class in ['TG', 'DG', 'MG']:
             # if usr_fa_cfg in ['', pl_fa_cfg]:
-            self.ui.tab_a_loadfalist_le.setText(tg_fa_cfg)
+            self.ui.tab_a_loadfalist_le.setText(pl_fa_cfg)
+            self.ui.tab_a_mzstart_dspb.setValue(600)
+            self.ui.tab_a_mzend_dspb.setValue(1200)
+            self.ui.tab_a_score_spb.setValue(50)
+            if self.ui.mode_lcms_rb.isChecked():
+                self.ui.tab_a_rtstart_dspb.setValue(20.0)
+                self.ui.tab_a_rtend_dspb.setValue(30.0)
             if _lipid_class in ['TG'] and _lipid_charge not in ['[M+Na]+']:
                 # if usr_score_cfg in ['', pl_score_cfg, dg_score_cfg]:
                 self.ui.tab_a_loadscorecfg_le.setText(tg_score_cfg)
             elif _lipid_class in ['TG'] and _lipid_charge in ['[M+Na]+']:
-                self.ui.tab_a_loadscorecfg_le.setText('.\ConfigurationFiles\\2-Score_weight_TG_Na.xlsx')
+                tg_na_abs_path, error_log = self.check_file('.\ConfigurationFiles\\2-Score_weight_TG_Na.xlsx',
+                                                            'TG [M+Na]+ Weight factor'
+                                                            )
+                self.ui.tab_a_loadscorecfg_le.setText(tg_na_abs_path)
             elif _lipid_class in ['DG']:
                 # if usr_score_cfg in ['', pl_score_cfg, tg_score_cfg]:
                 self.ui.tab_a_loadscorecfg_le.setText(dg_score_cfg)
+                self.ui.tab_a_mzstart_dspb.setValue(300)
+                self.ui.tab_a_mzend_dspb.setValue(900)
+                self.ui.tab_a_score_spb.setValue(40)
+                if self.ui.mode_lcms_rb.isChecked():
+                    self.ui.tab_a_rtstart_dspb.setValue(10.0)
+                    self.ui.tab_a_rtend_dspb.setValue(20.0)
             else:
                 self.ui.tab_a_loadscorecfg_le.setText('')
         else:
@@ -1216,19 +1272,21 @@ class SingleWorker(QtCore.QObject):
         self.infoback()
         self.info_update.emit(self.info_str)
 
-        try:
-            hunter_time, log_lst, output_df2 = huntlipids(self.params_dct, error_lst=log_lst)
-        except Exception as _e:
-            print(_e)
-            hunter_time = False
-            log_lst = False
-            export_df = False
-            time.sleep(1)
-            self.info_str = '!! Sorry, an error has occurred, please check your settings !!'
-            self.infoback()
-            self.info_update.emit(self.info_str)
-            time.sleep(1)
-            self.finished.emit()
+        hunter_time, log_lst, output_df2 = huntlipids(self.params_dct, error_lst=log_lst)
+
+        # try:
+        #     hunter_time, log_lst, output_df2 = huntlipids(self.params_dct, error_lst=log_lst)
+        # except Exception as _e:
+        #     print(_e)
+        #     hunter_time = False
+        #     log_lst = False
+        #     export_df = False
+        #     time.sleep(1)
+        #     self.info_str = '!! Sorry, an error has occurred, please check your settings !!'
+        #     self.infoback()
+        #     self.info_update.emit(self.info_str)
+        #     time.sleep(1)
+        #     self.finished.emit()
 
         err_info = ''
         if isinstance(log_lst, list):
@@ -1362,13 +1420,14 @@ class BatchWorker(QtCore.QObject):
                 self.info_update.emit(self.info_str)
 
             if ready_to_run is True:
-                try:
-                    hunter_time, log_lst, output_df2 = huntlipids(_param_dct, error_lst=log_lst)
-                except Exception as _e:
-                    print(_e)
-                    hunter_time = False
-                    log_lst = False
-                    export_df = False
+                hunter_time, log_lst, output_df2 = huntlipids(_param_dct, error_lst=log_lst)
+                # try:
+                #     hunter_time, log_lst, output_df2 = huntlipids(_param_dct, error_lst=log_lst)
+                # except Exception as _e:
+                #     print(_e)
+                #     hunter_time = False
+                #     log_lst = False
+                #     export_df = False
 
                 err_info = ''
                 if isinstance(log_lst, list):
@@ -1507,6 +1566,7 @@ class LMWorker(QtCore.QObject):
 if __name__ == '__main__':
     import sys
 
+    multiprocessing.freeze_support()
     app = QtGui.QApplication(sys.argv)
     window = LipidHunterMain()
     window.show()

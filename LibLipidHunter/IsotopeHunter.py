@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2016-2017  SysMedOs_team @ AG Bioanalytik, University of Leipzig:
+# Copyright (C) 2016-2019  SysMedOs_team @ AG Bioanalytik, University of Leipzig:
 # SysMedOs_team: Zhixu Ni, Georgia Angelidou, Mike Lange, Maria Fedorova
 # LipidHunter is Dual-licensed
 #     For academic and non-commercial use: `GPLv2 License` Please read more information by the following link:
@@ -14,12 +14,8 @@
 # DOI: 10.1021/acs.analchem.7b01126
 #
 # For more info please contact:
-#     SysMedOs_team: oxlpp@bbz.uni-leipzig.de
 #     Developer Zhixu Ni zhixu.ni@uni-leipzig.de
 #     Developer Georgia Angelidou georgia.angelidou@uni-leipzig.de
-
-from __future__ import division
-from __future__ import print_function
 
 import re
 
@@ -171,7 +167,7 @@ class IsotopeHunter(object):
             top_obs_i = 0
             top_delta = 0
 
-        if pr_obs_i >= 0.75 * top_obs_i > 0:
+        if pr_obs_i * 1.5 >= top_obs_i > 0:
             peak_top = True
             # print(core_count,
             #       '[PASSED]MS1 PR m/z {pr} is peak top in +/- {delta} m/z, PR i {obs_i}, max i {max_i}'
@@ -378,7 +374,9 @@ class IsotopeHunter(object):
         if ms1_pr_i > max_pre_m_i or pseudo_pr_check == 0:
             elem_dct = self.get_elements(formula)
             mono_mz = self.get_mono_mz(elem_dct)
-            if abs((ms1_pr_mz - mono_mz)) <= ms1_precision * ms1_pr_mz:
+            pr_range_top, range_top_obs_i = self.peak_top_checker(ms1_pr_mz, spec_df, core_count=core_count,
+                                                                  ms1_precision=ms1_precision * 2.5)
+            if pr_range_top and abs((ms1_pr_mz - mono_mz)) <= ms1_precision * ms1_pr_mz:
                 isotope_pattern_df = self.get_isotope_mz(elem_dct, only_c=only_c)
                 # print(isotope_pattern_df)
                 ms1_pr_i -= m0_base_abs

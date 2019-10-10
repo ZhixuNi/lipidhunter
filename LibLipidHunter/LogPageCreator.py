@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2016-2017  SysMedOs_team @ AG Bioanalytik, University of Leipzig:
+# Copyright (C) 2016-2019  SysMedOs_team @ AG Bioanalytik, University of Leipzig:
 # SysMedOs_team: Zhixu Ni, Georgia Angelidou, Mike Lange, Maria Fedorova
 # LipidHunter is Dual-licensed
 #     For academic and non-commercial use: `GPLv2 License` Please read more information by the following link:
@@ -14,12 +14,8 @@
 # DOI: 10.1021/acs.analchem.7b01126
 #
 # For more info please contact:
-#     SysMedOs_team: oxlpp@bbz.uni-leipzig.de
 #     Developer Zhixu Ni zhixu.ni@uni-leipzig.de
 #     Developer Georgia Angelidou georgia.angelidou@uni-leipzig.de
-
-from __future__ import division
-from __future__ import print_function
 
 from operator import itemgetter
 import os
@@ -223,8 +219,8 @@ class LogPageCreator(object):
         with open(self.image_lst_page, 'a') as img_page:
             with open(self.idx_lst_page, 'a') as idx_page:
 
-                _log_info_df = ident_info_df
-                _log_info_df.is_copy = False
+                _log_info_df = ident_info_df.copy()
+                # _log_info_df.is_copy = False
                 _log_info_df['MS1_log_mz'] = _log_info_df['MS1_obs_mz'].round(1)
                 _log_info_df = _log_info_df.sort_values(by=['MS1_log_mz', 'Proposed_structures', 'MS2_scan_time',
                                                             'RANK_SCORE'], ascending=[True, True, True, False])
