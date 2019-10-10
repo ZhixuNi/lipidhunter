@@ -90,6 +90,7 @@ class LipidComposer:
         header_lst = fa_df.columns.values.tolist()
         print (NameParserFA().lipid_fa_dct[lipid_class])
         if NameParserFA().lipid_fa_dct[lipid_class][0] in header_lst and 'FATTYACID' in header_lst:
+            # Note:  if statement will be remove
             if NameParserFA().lipid_fa_dct[lipid_class][2] == 'Base':
                 base_lst=[]
                 for k in NameParserFA().lipid_fa_dct[lipid_class][3]:
@@ -104,6 +105,11 @@ class LipidComposer:
                 q_str = '{cl} == "T" and {fa} == "T"'.format(cl=NameParserFA().lipid_fa_dct[lipid_class][0], fa=k)
                 print(q_str)
                 fa_lst = fa_df.query(q_str)['FATTYACID'].tolist()
+                spb_str = 'SPB'
+                spb_lst = list(filter(lambda x: spb_str in x, fa_lst))
+                sn_units_lst.append(spb_lst)
+                fa_str = 'FA'
+                fa_lst = list(filter(lambda x: fa_str in x, fa_lst))
                 sn_units_lst.append(fa_lst)
             # # Note: it can be skip and do this in a later step (georgia: 18.2.2019)
             # if NameParserFA().lipid_fa_dct[lipid_class][0] == 'LPL':
@@ -1133,14 +1139,14 @@ class LipidComposer:
 
 if __name__ == '__main__':
     # TODO (georgia.angelidou@uni-leipzig.de): Upgrade to ceramide lipid composition
-    fa_lst_file = r'../ConfigurationFiles/1-FA_Whitelist_cER.xlsx'
+    fa_lst_file = r'../ConfigurationFiles/1-FA_Whitelist_cER_v2.xlsx'
     # fa_lst_file = r'../ConfigurationFiles/1-FA_Whitelist_TG-DG.xlsx'
 
     # Note:
-    # exact position means to consider the poition from the FA white list that the user give but,
+    # exact position means to consider the position from the FA white list that the user give but,
     # in the case that the user define 2 different FA for both positions then:
     # When it is false it will give only one option
-    # and when it is TRUE to give both compinations that these 2 FA an make (in case of phospholipids)
+    # and when it is TRUE to give both combinations that these 2 FA an make (in case of phospholipids)
 
     # usr_param_dct = {'fa_whitelist': fa_lst_file, 'lipid_class': 'Cer', 'charge_mode': '[M+H]+',
     #                  'exact_position': 'FALSE'}
@@ -1151,15 +1157,15 @@ if __name__ == '__main__':
     #                  'exact_position': 'FALSE'}
 
     composer = LipidComposer()
-    calc_fa_df = composer.calc_fa_query(usr_param_dct['lipid_class'], usr_param_dct['charge_mode'],
-                                        fa_lst_file, ms2_ppm=50)
-    usr_lipid_master_df = composer.compose_lipid(usr_param_dct,  calc_fa_df,  ms2_ppm=30)
-    print('[INFO] --> Lipid Master Table generated...')
-    master_csv = r'../Temp/LipidMaster_Whitelist_%s.csv' % usr_param_dct['lipid_class']
-    usr_lipid_master_df.to_csv(master_csv)
-    # master_csv = r'../Temp/LipidMaster_Whitelist_TG_ML.csv'
+    # calc_fa_df = composer.calc_fa_query(usr_param_dct['lipid_class'], usr_param_dct['charge_mode'],
+    #                                     fa_lst_file, ms2_ppm=50)
+    # usr_lipid_master_df = composer.compose_lipid(usr_param_dct,  calc_fa_df,  ms2_ppm=30)
+    # print('[INFO] --> Lipid Master Table generated...')
+    # master_csv = r'../Temp/LipidMaster_Whitelist_%s.csv' % usr_param_dct['lipid_class']
+    # usr_lipid_master_df.to_csv(master_csv)
+    # # master_csv = r'../Temp/LipidMaster_Whitelist_TG_ML.csv'
 
-    fa_csv = r'../Temp/LipidMaster_FAlist_%s.csv' % usr_param_dct['lipid_class']
+    fa_csv = r'../Temp/LipidMaster_FAlist2_%s.csv' % usr_param_dct['lipid_class']
 
     calc_fa_df = composer.calc_fa_query(usr_param_dct['lipid_class'], usr_param_dct['charge_mode'],
                                         fa_lst_file, ms2_ppm=50)
@@ -1169,5 +1175,5 @@ if __name__ == '__main__':
 
     print(calc_fa_df.head())
 
-    # calc_fa_df.to_csv(fa_csv)
+    calc_fa_df.to_csv(fa_csv)
     print('[INFO] --> Finished...')
