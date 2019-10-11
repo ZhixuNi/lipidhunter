@@ -37,7 +37,7 @@ class ElemCalc:
         dg_elem_gen = {'C': 3, 'H': 4, 'O': 5, 'P': 0, 'N': 0, 'Na': 0}
         fa_elem_gen = {'C': 0, 'H': 0, 'O': 2, 'P': 0, 'N': 0, 'Na': 0}
         lpl_elem_gen = {'C': 3, 'H': 4, 'O': 3, 'P': 0, 'N': 0, 'Na': 0}
-        cer_elem_gen = {'C': 0, 'H': 1, 'O': 0, 'P': 0, 'N': 1, 'Na': 0}
+        cer_elem_gen = {'C': 0, 'H': 1, 'O': 1, 'P': 0, 'N': 1, 'Na': 0}
 
         # Note: Will be deleted (georgia: 14.2.2019)
         self.lipid_hg_elem_dct = {'PA': pa_hg_elem, 'PC': pc_hg_elem, 'PE': pe_hg_elem, 'PG': pg_hg_elem,
@@ -77,7 +77,7 @@ class ElemCalc:
                                    'K': [(38.9637069, 0.932581), (39.96399867, 0.000117), (40.96182597, 0.067302)],
                                    }
 
-        self.fa_rgx = re.compile(r'([a-zA-Z\-]{1,3})*(\()*(([a-zA-Z\-]{1,3})*(\d{1,2})(:)(\d))(\))*')
+        self.fa_rgx = re.compile(r'([a-zA-Z\-]{1,3})*(\()*(([a-zA-Z\-]{1,3})*(\d{1,2})(:)(\d)(;)*(\d)*)(\))*')
 
         fa_2_link_dct = {'A-': ['A-A-', {'A':''}],
                        'O-': ['O-A-', {'O':'', 'A':'O-'}],
@@ -170,9 +170,14 @@ class ElemCalc:
             bulk_fa_c = abbr_typ_lst[4]
             bulk_fa_db = abbr_typ_lst[6]
             if abbr_typ_lst[3] is None:
+                # Comment: Not true in ceramides but cannot influence in the later steps so we leave it like this
                 bulk_fa_linker = 'A-'
             else:
                 bulk_fa_linker = abbr_typ_lst[3]
+            if abbr_typ_lst[8] is not None:
+                bulk_fa_o = abbr_typ_lst[8]
+            else:
+                bulk_fa_o = 0
 
         # Delet: will be delete all combine in the above section (georgia: 13.2.2019)
         # print(abbr)
@@ -317,8 +322,10 @@ class ElemCalc:
 
         bulk_fa_c = int(bulk_fa_c)
         bulk_fa_db = int(bulk_fa_db)
-
-        lipid_info_dct = {'TYPE': _pl_typ, 'LINK': bulk_fa_linker, 'C': bulk_fa_c, 'DB': bulk_fa_db,}
+        bulk_fa_o = int(bulk_fa_o)
+        # Comment: bulk_fa_o should indicate the number of hydroxy groups (side chains) in the structure
+        # Current use for the sphingolipids
+        lipid_info_dct = {'TYPE': _pl_typ, 'LINK': bulk_fa_linker, 'C': bulk_fa_c, 'DB': bulk_fa_db, 'O': bulk_fa_o}
 
         return lipid_info_dct
 
@@ -333,6 +340,7 @@ class ElemCalc:
                 tmp_lipid_elem_dct[k] += self.lipid_hg_elem_dct2[lipid_type][1][k]
             tmp_lipid_elem_dct['C'] += usr_lipid_info_dct['C']
             tmp_lipid_elem_dct['H'] += usr_lipid_info_dct['C'] * 2 - usr_lipid_info_dct['DB'] * 2
+            tmp_lipid_elem_dct['O'] += usr_lipid_info_dct['O']
             if usr_lipid_info_dct['LINK'] in self.link_elem_dct.keys():
                 for k in self.link_elem_dct[usr_lipid_info_dct['LINK']].keys():
                     tmp_lipid_elem_dct[k] += self.link_elem_dct[usr_lipid_info_dct['LINK']][k]
@@ -608,18 +616,19 @@ if __name__ == '__main__':
     usr_bulk_abbr_lst = [
         # 'TG(48:2)',
         # 'PC(O-34:0)',
-        # 'PC(36:3)',
+        #  'PC(36:3)',
         # 'TG(P-48:2)',
         # 'LPC(20:3)',
         # '35:3'
-        'Cer(d34:0)',
+        # 'Cer(d34:0)',
         #'t10:0',
         # 'FA10:0'
+        'Cer(30:1;2)'
     ]
     # charge_lst = ['[M+NH4]+', '[M-H]-', '[M+HCOO]-', '[M+OAc]-']
     # usr_bulk_abbr_lst = ['PC(36:3)', 'PC(O-36:3)', 'PC(P-36:3)']
     # charge_lst = ['', '[M-H]-', '[M+HCOO]-', '[M+OAc]-']
-    charge_lst = ['', '[M+H]+', '[M+NH4]+']
+    charge_lst = ['', '[M+H]+', '[M-H]-']
 
     abbr2formula = ElemCalc()
 

@@ -24,6 +24,7 @@ from __future__ import print_function
 import itertools
 
 import pandas as pd
+import numpy as np
 from natsort import natsorted, ns
 
 try:
@@ -88,12 +89,12 @@ class LipidComposer:
         sn_units_lst = []
         # Note: the calc_fa_df was compine in this function (georgia: 15.2.2019)
         header_lst = fa_df.columns.values.tolist()
-        print (NameParserFA().lipid_fa_dct[lipid_class])
-        if NameParserFA().lipid_fa_dct[lipid_class][0] in header_lst and 'FATTYACID' in header_lst:
+        print (NameParserFA(lipid_class).lipid_fa_dct[lipid_class])
+        if NameParserFA(lipid_class).lipid_fa_dct[lipid_class][0] in header_lst and 'FATTYACID' in header_lst:
             # Note:  if statement will be remove
-            if NameParserFA().lipid_fa_dct[lipid_class][2] == 'Base':
+            if NameParserFA(lipid_class).lipid_fa_dct[lipid_class][2] == 'Base':
                 base_lst=[]
-                for k in NameParserFA().lipid_fa_dct[lipid_class][3]:
+                for k in NameParserFA(lipid_class).lipid_fa_dct[lipid_class][3]:
                     q_str = '{cl} == "T" and {fa} == "T"'.format(cl=NameParserFA().lipid_fa_dct[lipid_class][0], fa=k)
                     fa_lst = fa_df.query(q_str)['FATTYACID'].tolist()
                     fa_l_st = '_'.join(fa_lst)
@@ -101,15 +102,16 @@ class LipidComposer:
                     fa_lst = fa_l_st.split('_')
                     base_lst = base_lst + fa_lst
                 sn_units_lst.append(base_lst)
-            for k in NameParserFA().lipid_fa_dct[lipid_class][1]:
-                q_str = '{cl} == "T" and {fa} == "T"'.format(cl=NameParserFA().lipid_fa_dct[lipid_class][0], fa=k)
+            for k in NameParserFA(lipid_class).lipid_fa_dct[lipid_class][1]:
+                q_str = '{cl} == "T" and {fa} == "T"'.format(cl=NameParserFA(lipid_class).lipid_fa_dct[lipid_class][0], fa=k)
                 print(q_str)
                 fa_lst = fa_df.query(q_str)['FATTYACID'].tolist()
                 spb_str = 'SPB'
                 spb_lst = list(filter(lambda x: spb_str in x, fa_lst))
-                sn_units_lst.append(spb_lst)
-                fa_str = 'FA'
-                fa_lst = list(filter(lambda x: fa_str in x, fa_lst))
+                if len(spb_lst) > 1:
+                    sn_units_lst.append(spb_lst)
+                    fa_str = 'FA'
+                    fa_lst = list(filter(lambda x: fa_str in x, fa_lst))
                 sn_units_lst.append(fa_lst)
             # # Note: it can be skip and do this in a later step (georgia: 18.2.2019)
             # if NameParserFA().lipid_fa_dct[lipid_class][0] == 'LPL':
@@ -226,7 +228,7 @@ class LipidComposer:
             fa_abbr_lst.extend(_s)  # Put all the FA in one list
         fa_abbr_lst = sorted(list(set(fa_abbr_lst)))
 
-        abbr_parser = NameParserFA()
+        abbr_parser = NameParserFA(lipid_class)
         elem_calc = ElemCalc()
         usr_fa_dct = {}
         for _fa_abbr in fa_abbr_lst:
@@ -352,23 +354,24 @@ class LipidComposer:
 
     def gen_all_comb(self, lipid_class, usr_fa_df, position=False):
 
+
         fa_units_lst = self.calc_fa_df2(lipid_class, usr_fa_df)
 
-        if NameParserFA().lipid_fa_dct[lipid_class][4] == 1:
+        if NameParserFA(lipid_class).lipid_fa_dct[lipid_class][4] == 1:
             fa_comb_lst = list(itertools.product(fa_units_lst[0], ['']))
-            fa_df_header_lst = NameParserFA().lipid_fa_dct[lipid_class][1]
+            fa_df_header_lst = NameParserFA(lipid_class).lipid_fa_dct[lipid_class][1]
             fa_df_header_lst.append('FA2')
-        elif NameParserFA().lipid_fa_dct[lipid_class][4] == 2:
+        elif NameParserFA(lipid_class).lipid_fa_dct[lipid_class][4] == 2:
             fa_comb_lst = list(itertools.product(fa_units_lst[0], fa_units_lst[1]))
-            fa_df_header_lst = NameParserFA().lipid_fa_dct[lipid_class][1]
-            if lipid_class == 'Cer':
-                fa_df_header_lst = [NameParserFA().lipid_fa_dct[lipid_class][2]] + fa_df_header_lst
-        elif NameParserFA().lipid_fa_dct[lipid_class][4] == 3:
+            fa_df_header_lst = NameParserFA(lipid_class).lipid_fa_dct[lipid_class][1]
+            # if lipid_class == 'Cer':
+            #     fa_df_header_lst = [NameParserFA().lipid_fa_dct[lipid_class][2]] + fa_df_header_lst
+        elif NameParserFA(lipid_class).lipid_fa_dct[lipid_class][4] == 3:
             fa_comb_lst = list(itertools.product(fa_units_lst[0], fa_units_lst[1], fa_units_lst[2]))
-            fa_df_header_lst = NameParserFA().lipid_fa_dct[lipid_class][1]
-        elif NameParserFA().lipid_fa_dct[lipid_class][4] == 4:
+            fa_df_header_lst = NameParserFA(lipid_class).lipid_fa_dct[lipid_class][1]
+        elif NameParserFA(lipid_class).lipid_fa_dct[lipid_class][4] == 4:
             fa_comb_lst = list(itertools.product(fa_units_lst[0], fa_units_lst[1], fa_units_lst[2], fa_units_lst[3]))
-            fa_df_header_lst = NameParserFA().lipid_fa_dct[lipid_class][1]
+            fa_df_header_lst = NameParserFA(lipid_class).lipid_fa_dct[lipid_class][1]
         else:
             fa_comb_lst = []
             fa_df_header_lst = []
@@ -417,19 +420,21 @@ class LipidComposer:
             fa_combo_link_df = fa_combo_df
             fa_combo_link_df.is_copy = False
             fa_combo_link_df['LINK'] = fa_combo_link_df['FA1'].str[0:2]
-            fa_link_df = fa_combo_link_df[fa_combo_link_df['LINK'] == 'FA']
+            fa_link_df = fa_combo_link_df[(fa_combo_link_df['LINK'] == "FA") | (fa_combo_link_df['LINK'] == "SP")]
             fa_link_df.is_copy = False
             fa_link_df.drop(['LINK', 'CLASS'], axis=1, inplace=True)
-            fa_link_df.values.sort(kind='mergesort')
+            if NameParserFA(lipid_class).lipid_fa_dct[lipid_class][2] != 0:
+                fa_link_df.values.sort(kind='mergesort')
             fa_link_df['CLASS'] = lipid_class
+            # Note: The header list is never len 1
             if len(fa_df_header_lst) == 1:
                 fa_link_df['DISCRETE_ABBR'] = (fa_link_df['CLASS'] + '(' +
-                                            fa_link_df[fa_df_header_lst[0]].str.strip('FA') + ')')
+                                            fa_link_df[fa_df_header_lst[0]].str.strip('FA').str.strip('SPB') + ')')
             elif len(fa_df_header_lst) == 2:
                 fa_link_df['DISCRETE_ABBR'] = (fa_link_df['CLASS'] + '(' +
-                                               fa_link_df[fa_df_header_lst[0]].str.strip('FA') + '_' +
+                                               fa_link_df[fa_df_header_lst[0]].str.strip('FA').str.strip('SPB') + '_' +
                                                fa_link_df[fa_df_header_lst[1]].str.strip('FA') + ')')
-                if NameParserFA().lipid_fa_dct[lipid_class][4] == 1:
+                if NameParserFA(lipid_class).lipid_fa_dct[lipid_class][4] == 1:
                     fa_link_df['DISCRETE_ABBR'] = fa_link_df['DISCRETE_ABBR'].str.replace(r'_', '')
             elif len(fa_df_header_lst) == 3:
                 fa_link_df['DISCRETE_ABBR'] = (fa_link_df['CLASS'] + '(' +
@@ -443,7 +448,7 @@ class LipidComposer:
                                                 fa_combo_df[fa_df_header_lst[2]].str.strip('FA') + '_' +
                                                 fa_combo_df[fa_df_header_lst[3]].str.strip('FA') + ')')
 
-            if NameParserFA().lipid_fa_dct[lipid_class][5]:
+            if NameParserFA(lipid_class).lipid_fa_dct[lipid_class][5]:
                 op_link_df = fa_combo_link_df[(fa_combo_link_df['LINK'] == 'O-') | (fa_combo_link_df['LINK'] == 'P-')]
                 if not op_link_df.empty:
                     op_link_df.is_copy = False
@@ -455,7 +460,7 @@ class LipidComposer:
                         op_link_df['DISCRETE_ABBR'] = (op_link_df['CLASS'] + '(' +
                                                        op_link_df[fa_df_header_lst[0]].str.strip('FA') + '_' +
                                                        op_link_df[fa_df_header_lst[1]].str.strip('FA') + ')')
-                        if NameParserFA().lipid_fa_dct[lipid_class][4] == 1:
+                        if NameParserFA(lipid_class).lipid_fa_dct[lipid_class][4] == 1:
                             op_link_df['DISCRETE_ABBR'] = op_link_df['DISCRETE_ABBR'].str.replace(r'_', '')
                     elif len(fa_df_header_lst) == 3:
                         op_link_df['DISCRETE_ABBR'] = (op_link_df['CLASS'] + '(' +
@@ -628,289 +633,314 @@ class LipidComposer:
     def calc_fragments_geo(self, lipid_dct, charge='', ms2_ppm=100):
 
         # m_formula = lipid_dct['FORMULA']
-        fa_header_list= NameParserFA().lipid_fa_dct[lipid_dct['CLASS']][1]
-        if NameParserFA().lipid_fa_dct[lipid_dct['CLASS']][2] is not None:
-            fa_header_list = [NameParserFA().lipid_fa_dct[lipid_dct['CLASS']][2]] + fa_header_list
+        fa_header_list= NameParserFA(lipid_dct['CLASS']).lipid_fa_dct[lipid_dct['CLASS']][1]
+        # was usuful when they were the Base fragment in a separate entry in the list
+        # if NameParserFA(lipid_dct['CLASS']).lipid_fa_dct[lipid_dct['CLASS']][2] is not None:
+        #     fa_header_list = [NameParserFA(lipid_dct['CLASS']).lipid_fa_dct[lipid_dct['CLASS']][2]] + fa_header_list
         m_exactmass = lipid_dct['EXACTMASS']
         m_class = lipid_dct['CLASS']
 
-        if NameParserFA().lipid_mode_dct[m_class][charge][3] is not None:
-            for frag in NameParserFA().lipid_mode_dct[m_class][charge][3]:
-                for k_h in fa_header_list:
-                    lipid_dct['{f}_ABBR'.format(f= frag.replace('FA', k_h))] = frag.replace('FA', lipid_dct[k_h])
-                    lipid_dct['{f}_MZ'.format(f=frag.replace('FA', k_h))] = round(
-                        m_exactmass - lipid_dct['{k}_EXACTMASS'.format(k=k_h)] + NameParserFA().loss_dct[frag], 6)
-                    low_v = round(
-                        ppm_window_para(lipid_dct['{f}_MZ'.format(f=frag.replace('FA', k_h))], ms2_ppm * -1), 6)
-                    high_v = round(ppm_window_para(lipid_dct['{f}_MZ'.format(f=frag.replace('FA', k_h))], ms2_ppm), 6)
-                    lipid_dct['{f}_Q'.format(f=frag.replace('FA', k_h))] = (low_v.astype(str) + ' <= mz <= '
+        # Note: need to check if this section is neccessary otherwise should be removed
+        # Note: this section need to improve to give the correct water losses for the different ceramides base
+        # Future
+        if NameParserFA(lipid_dct['CLASS']).lipid_mode_dct[m_class][charge][3] is not None:
+            print (NameParserFA(lipid_dct['CLASS']).lipid_mode_dct[m_class][charge][3])
+            for frag in NameParserFA(lipid_dct['CLASS']).lipid_mode_dct[m_class][charge][3]:
+                lipid_dct['{f}_ABBR'.format(f=frag)] = frag.replace('X', NameParserFA(lipid_dct['CLASS']).lipid_mode_dct[m_class][charge][4])
+                lipid_dct['{f}_MZ'.format(f=frag)] = round(
+                    m_exactmass + NameParserFA(lipid_dct['CLASS']).loss_dct[frag], 6)
+                low_v = round(
+                        ppm_window_para(lipid_dct['{f}_MZ'.format(f=frag)], ms2_ppm * -1), 6)
+                high_v = round(ppm_window_para(lipid_dct['{f}_MZ'.format(f=frag)], ms2_ppm), 6)
+                lipid_dct['{f}_Q'.format(f=frag)] = (low_v.astype(str) + ' <= mz <= '
                                                                             + high_v.astype(str))
-
+                # Comment: below section was for an alternative reason but at the end was not necessary thats it why the above section was added later
+                # for k_h in fa_header_list:
+                #     lipid_dct['{f}_ABBR'.format(f= frag.replace('FA', k_h))] = frag.replace('FA', lipid_dct[k_h])
+                #     lipid_dct['{f}_MZ'.format(f=frag.replace('FA', k_h))] = round(
+                #         m_exactmass - lipid_dct['{k}_EXACTMASS'.format(k=k_h)] + NameParserFA().loss_dct[frag], 6)
+                #     low_v = round(
+                #         ppm_window_para(lipid_dct['{f}_MZ'.format(f=frag.replace('FA', k_h))], ms2_ppm * -1), 6)
+                #     high_v = round(ppm_window_para(lipid_dct['{f}_MZ'.format(f=frag.replace('FA', k_h))], ms2_ppm), 6)
+                #     lipid_dct['{f}_Q'.format(f=frag.replace('FA', k_h))] = (low_v.astype(str) + ' <= mz <= '
+                #                                                             + high_v.astype(str))
+        # # else:
+        #     for frag in NameParserFA().lipid_mode_dct[m_class][charge][3]:
+        #         for k_h in fa_header_list:
+        #             lipid_dct['{f}_ABBR'.format(f= frag.replace('FA', k_h))] = frag.replace('FA', lipid_dct[k_h])
+        #             lipid_dct['{f}_MZ'.format(f=frag.replace('FA', k_h))] = round(
+        #                 m_exactmass - lipid_dct['{k}_EXACTMASS'.format(k=k_h)] + NameParserFA().loss_dct[frag], 6)
+        #             low_v = round(
+        #                 ppm_window_para(lipid_dct['{f}_MZ'.format(f=frag.replace('FA', k_h))], ms2_ppm * -1), 6)
+        #             high_v = round(ppm_window_para(lipid_dct['{f}_MZ'.format(f=frag.replace('FA', k_h))], ms2_ppm), 6)
+        #             lipid_dct['{f}_Q'.format(f=frag.replace('FA', k_h))] = (low_v.astype(str) + ' <= mz <= '
+        #                                                                     + high_v.astype(str))
         return lipid_dct
 
-    @staticmethod
-    def calc_fragments(lipid_dct, charge='', ms2_ppm=100):
-
-        # m_formula = lipid_dct['FORMULA']
-        m_exactmass = lipid_dct['EXACTMASS']
-        m_class = lipid_dct['CLASS']
-
-        h_exactmass = 1.0078250321
-        na_exactmass = 22.98976967
-        nh3_exactmass = 3 * 1.0078250321 + 14.0030740052
-        ch3_exactmass = 12.0 + 3 * 1.0078250321
-        nl_water = 2 * 1.0078250321 + 15.9949146221
-        gly_mg_base_exactmass = 3 * 12.0 + 5 * 1.0078250321 + 15.9949146221
-        fa1_abbr = lipid_dct['FA1'].strip('FA')
-        fa2_abbr = lipid_dct['FA2'].strip('FA')
-
-        fa1_exactmass = lipid_dct['FA1_EXACTMASS']
-        # Note: The reason of the below statement is because of the lyso species they have an FA2 column but no FA2_EXACTMASS (georgia: 14.2.2019)
-        if 'FA2_EXACTMASS' in list(lipid_dct.keys()):
-            fa2_exactmass = lipid_dct['FA2_EXACTMASS']
-
-        if m_class in ['PA', 'PE', 'PG', 'PI', 'PS', 'PIP', 'PL']:
-
-            lyso_str = 'L' + m_class
-
-            # create the abbreviation name for the Lyso fragments eg. LPE(18:0)-H]-_ABBR
-            # without the loss of water
-            lipid_dct['[LPL(FA1)-H]-_ABBR'] = '[%s(%s)-H]-' % (lyso_str, fa1_abbr)
-            lipid_dct['[LPL(FA2)-H]-_ABBR'] = '[%s(%s)-H]-' % (lyso_str, fa2_abbr)
-            # with the loss of water
-            lipid_dct['[LPL(FA1)-H2O-H]-_ABBR'] = '[%s(%s)-H2O-H]-' % (lyso_str, fa1_abbr)
-            lipid_dct['[LPL(FA2)-H2O-H]-_ABBR'] = '[%s(%s)-H2O-H]-' % (lyso_str, fa2_abbr)
-
-            # calculation of the exact mass for the different lyso fragments
-            lipid_dct['[LPL(FA1)-H]-_MZ'] = round(m_exactmass - (fa2_exactmass - nl_water) - h_exactmass, 6)
-            lipid_dct['[LPL(FA2)-H]-_MZ'] = round(m_exactmass - (fa1_exactmass - nl_water) - h_exactmass, 6)
-            lipid_dct['[LPL(FA1)-H2O-H]-_MZ'] = round(m_exactmass - fa2_exactmass - h_exactmass, 6)
-            lipid_dct['[LPL(FA2)-H2O-H]-_MZ'] = round(m_exactmass - fa1_exactmass - h_exactmass, 6)
-
-        elif m_class in ['PC']:
-
-            lyso_str = 'L' + m_class
-            # The abbr. here is not exactly correct due to the compatibility issues with ranks core calc functions
-            lipid_dct['[LPL(FA1)-H]-_ABBR'] = '[%s(%s)-CH3]-' % (lyso_str, fa1_abbr)
-            lipid_dct['[LPL(FA2)-H]-_ABBR'] = '[%s(%s)-CH3]-' % (lyso_str, fa2_abbr)
-            lipid_dct['[LPL(FA1)-H2O-H]-_ABBR'] = '[%s(%s)-H2O-CH3]-' % (lyso_str, fa1_abbr)
-            lipid_dct['[LPL(FA2)-H2O-H]-_ABBR'] = '[%s(%s)-H2O-CH3]-' % (lyso_str, fa2_abbr)
-
-            lipid_dct['[LPL(FA1)-H]-_MZ'] = round(m_exactmass - (fa2_exactmass - nl_water) - ch3_exactmass, 6)
-            lipid_dct['[LPL(FA2)-H]-_MZ'] = round(m_exactmass - (fa1_exactmass - nl_water) - ch3_exactmass, 6)
-            lipid_dct['[LPL(FA1)-H2O-H]-_MZ'] = round(m_exactmass - fa2_exactmass - ch3_exactmass, 6)
-            lipid_dct['[LPL(FA2)-H2O-H]-_MZ'] = round(m_exactmass - fa1_exactmass - ch3_exactmass, 6)
-
-        elif m_class in ['LPA', 'LPE', 'LPG', 'LPI', 'LPS', 'LPIP', 'LPL']:
-            pass
-
-        elif m_class in ['LPC']:
-            pass
-
-        elif m_class in ['TG']:
-            # Here maybe should get the DG fragments
-            # TODO(georgia.angelidou@uni-leipzig.de): create the section for theuniue fragments when there is TG
-            #   Missing the fragments for the sodium adduct
-
-            # The different frgments for triacylglycerol names when neutral loss of the FA
-            # Take the correspond information of the 3 FA
-            fa3_abbr = lipid_dct['FA3'].strip('FA')
-            fa3_exactmass = lipid_dct['FA3_EXACTMASS']
-            dg_str = 'M'
-            if charge in ['[M+Na]+']:
-                fa1_Na_exactmass = lipid_dct['FA1_[FA-H+Na]_MZ']
-                fa2_Na_exactmass = lipid_dct['FA2_[FA-H+Na]_MZ']
-                fa3_Na_exactmass = lipid_dct['FA3_[FA-H+Na]_MZ']
-
-                lipid_dct['[M-(FA1)+Na]+_ABBR'] = '[%s-FA%s+Na]+' % (dg_str, fa1_abbr)
-                lipid_dct['[M-(FA2)+Na]+_ABBR'] = '[%s-FA%s+Na]+' % (dg_str, fa2_abbr)
-                lipid_dct['[M-(FA3)+Na]+_ABBR'] = '[%s-FA%s+Na]+' % (dg_str, fa3_abbr)
-
-                lipid_dct['[M-(FA1-H+Na)+H]+_ABBR'] = '[%s-(FA%s-H+Na)+H]+' % (dg_str, fa1_abbr)
-                lipid_dct['[M-(FA2-H+Na)+H]+_ABBR'] = '[%s-(FA%s-H+Na)+H]+' % (dg_str, fa2_abbr)
-                lipid_dct['[M-(FA3-H+Na)+H]+_ABBR'] = '[%s-(FA%s-H+Na)+H]+' % (dg_str, fa3_abbr)
-
-                lipid_dct['[M-(FA1)+Na]+_MZ'] = round(m_exactmass - fa1_exactmass + na_exactmass, 6)
-                lipid_dct['[M-(FA2)+Na]+_MZ'] = round(m_exactmass - fa2_exactmass + na_exactmass, 6)
-                lipid_dct['[M-(FA3)+Na]+_MZ'] = round(m_exactmass - fa3_exactmass + na_exactmass, 6)
-
-                lipid_dct['[M-(FA1-H+Na)+H]+_MZ'] = round(m_exactmass - fa1_Na_exactmass + na_exactmass, 6)
-                lipid_dct['[M-(FA2-H+Na)+H]+_MZ'] = round(m_exactmass - fa2_Na_exactmass + na_exactmass, 6)
-                lipid_dct['[M-(FA3-H+Na)+H]+_MZ'] = round(m_exactmass - fa3_Na_exactmass + na_exactmass, 6)
-
-                lipid_dct['[M-(FA1)+Na]+_MZ_LOW'] = ppm_window_para((m_exactmass - (fa1_exactmass) + na_exactmass),
-                                                                    ms2_ppm * -1)
-                lipid_dct['[M-(FA1)+Na]+_MZ_HIGH'] = ppm_window_para((m_exactmass - (fa1_exactmass) + na_exactmass),
-                                                                     ms2_ppm)
-                lipid_dct['[M-(FA1)+Na]+_Q'] = (
-                        lipid_dct['[M-(FA1)+Na]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
-                    '[M-(FA1)+Na]+_MZ_HIGH'].astype(str))
-
-                lipid_dct['[M-(FA2)+Na]+_MZ_LOW'] = ppm_window_para((m_exactmass - (fa2_exactmass) + na_exactmass),
-                                                                    ms2_ppm * -1)
-                lipid_dct['[M-(FA2)+Na]+_MZ_HIGH'] = ppm_window_para((m_exactmass - (fa2_exactmass) + na_exactmass),
-                                                                     ms2_ppm)
-                lipid_dct['[M-(FA2)+Na]+_Q'] = (
-                        lipid_dct['[M-(FA2)+Na]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
-                    '[M-(FA2)+Na]+_MZ_HIGH'].astype(str))
-
-                lipid_dct['[M-(FA3)+Na]+_MZ_LOW'] = ppm_window_para((m_exactmass - (fa3_exactmass) + na_exactmass),
-                                                                    ms2_ppm * -1)
-                lipid_dct['[M-(FA3)+Na]+_MZ_HIGH'] = ppm_window_para((m_exactmass - (fa3_exactmass) + na_exactmass),
-                                                                     ms2_ppm)
-                lipid_dct['[M-(FA3)+Na]+_Q'] = (
-                        lipid_dct['[M-(FA3)+Na]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
-                    '[M-(FA3)+Na]+_MZ_HIGH'].astype(str))
-
-                lipid_dct['[M-(FA1-H+Na)+H]+_MZ_LOW'] = ppm_window_para(
-                    (m_exactmass - (fa1_Na_exactmass) + na_exactmass), ms2_ppm * -1)
-                lipid_dct['[M-(FA1-H+Na)+H]+_MZ_HIGH'] = ppm_window_para(
-                    (m_exactmass - (fa1_Na_exactmass) + na_exactmass), ms2_ppm)
-                lipid_dct['[M-(FA1-H+Na)+H]+_Q'] = (
-                        lipid_dct['[M-(FA1-H+Na)+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
-                    '[M-(FA1-H+Na)+H]+_MZ_HIGH'].astype(str))
-
-                lipid_dct['[M-(FA2-H+Na)+H]+_MZ_LOW'] = ppm_window_para(
-                    (m_exactmass - (fa2_Na_exactmass) + na_exactmass), ms2_ppm * -1)
-                lipid_dct['[M-(FA2-H+Na)+H]+_MZ_HIGH'] = ppm_window_para(
-                    (m_exactmass - (fa2_Na_exactmass) + na_exactmass), ms2_ppm)
-                lipid_dct['[M-(FA2-H+Na)+H]+_Q'] = (
-                        lipid_dct['[M-(FA2-H+Na)+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
-                    '[M-(FA2-H+Na)+H]+_MZ_HIGH'].astype(str))
-
-                lipid_dct['[M-(FA3-H+Na)+H]+_MZ_LOW'] = ppm_window_para(
-                    (m_exactmass - (fa3_Na_exactmass) + na_exactmass), ms2_ppm * -1)
-                lipid_dct['[M-(FA3-H+Na)+H]+_MZ_HIGH'] = ppm_window_para(
-                    (m_exactmass - (fa3_Na_exactmass) + na_exactmass), ms2_ppm)
-                lipid_dct['[M-(FA3-H+Na)+H]+_Q'] = (
-                        lipid_dct['[M-(FA3-H+Na)+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
-                    '[M-(FA3-H+Na)+H]+_MZ_HIGH'].astype(str))
-            else:
-                # Neutral loss of a FA with a water
-                lipid_dct['[M-(FA1)+H]+_ABBR'] = '[%s-FA%s+H]+' % (dg_str, fa1_abbr)
-                lipid_dct['[M-(FA2)+H]+_ABBR'] = '[%s-FA%s+H]+' % (dg_str, fa2_abbr)
-                lipid_dct['[M-(FA3)+H]+_ABBR'] = '[%s-FA%s+H]+' % (dg_str, fa3_abbr)
-                # Neutral loss of a FA minus a water
-                lipid_dct['[M-(FA1-H2O)+H]+_ABBR'] = '[%s-(FA%s-H2O)+H]+' % (dg_str, fa1_abbr)
-                lipid_dct['[M-(FA2-H2O)+H]+_ABBR'] = '[%s-(FA%s-H2O)+H]+' % (dg_str, fa2_abbr)
-                lipid_dct['[M-(FA3-H2O)+H]+_ABBR'] = '[%s-(FA%s-H2O)+H]+' % (dg_str, fa3_abbr)
-
-                lipid_dct['[M-(FA1)+H]+_MZ'] = round(m_exactmass - fa1_exactmass + h_exactmass, 6)
-                lipid_dct['[M-(FA2)+H]+_MZ'] = round(m_exactmass - fa2_exactmass + h_exactmass, 6)
-                lipid_dct['[M-(FA3)+H]+_MZ'] = round(m_exactmass - fa3_exactmass + h_exactmass, 6)
-
-                lipid_dct['[M-(FA1-H2O)+H]+_MZ'] = round(m_exactmass - (fa1_exactmass - nl_water) + h_exactmass, 6)
-                lipid_dct['[M-(FA2-H2O)+H]+_MZ'] = round(m_exactmass - (fa2_exactmass - nl_water) + h_exactmass, 6)
-                lipid_dct['[M-(FA3-H2O)+H]+_MZ'] = round(m_exactmass - (fa3_exactmass - nl_water) + h_exactmass, 6)
-
-                lipid_dct['[MG(FA1)-H2O+H]+_MZ_LOW'] = ppm_window_para((fa1_exactmass + gly_mg_base_exactmass),
-                                                                       ms2_ppm * -1)
-                lipid_dct['[MG(FA1)-H2O+H]+_MZ_HIGH'] = ppm_window_para((fa1_exactmass + gly_mg_base_exactmass),
-                                                                        ms2_ppm)
-                lipid_dct['[MG(FA1)-H2O+H]+_Q'] = (
-                        lipid_dct['[MG(FA1)-H2O+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' +
-                        lipid_dct['[MG(FA1)-H2O+H]+_MZ_HIGH'].astype(str))
-
-                lipid_dct['[MG(FA2)-H2O+H]+_MZ_LOW'] = ppm_window_para((fa2_exactmass + gly_mg_base_exactmass),
-                                                                       ms2_ppm * -1)
-                lipid_dct['[MG(FA2)-H2O+H]+_MZ_HIGH'] = ppm_window_para((fa2_exactmass + gly_mg_base_exactmass),
-                                                                        ms2_ppm)
-                lipid_dct['[MG(FA2)-H2O+H]+_Q'] = (
-                        lipid_dct['[MG(FA2)-H2O+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' +
-                        lipid_dct['[MG(FA2)-H2O+H]+_MZ_HIGH'].astype(str))
-
-                lipid_dct['[MG(FA3)-H2O+H]+_MZ_LOW'] = ppm_window_para((fa3_exactmass + gly_mg_base_exactmass),
-                                                                       ms2_ppm * -1)
-                lipid_dct['[MG(FA3)-H2O+H]+_MZ_HIGH'] = ppm_window_para((fa3_exactmass + gly_mg_base_exactmass),
-                                                                        ms2_ppm)
-                lipid_dct['[MG(FA3)-H2O+H]+_Q'] = (
-                        lipid_dct['[MG(FA3)-H2O+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' +
-                        lipid_dct['[MG(FA3)-H2O+H]+_MZ_HIGH'].astype(str))
-
-                lipid_dct['[M-(FA1)+H]+_MZ_LOW'] = ppm_window_para((m_exactmass - fa1_exactmass + h_exactmass),
-                                                                   ms2_ppm * -1)
-                lipid_dct['[M-(FA1)+H]+_MZ_HIGH'] = ppm_window_para((m_exactmass - fa1_exactmass + h_exactmass),
-                                                                    ms2_ppm)
-                lipid_dct['[M-(FA1)+H]+_Q'] = (lipid_dct['[M-(FA1)+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
-                    '[M-(FA1)+H]+_MZ_HIGH'].astype(str))
-
-                lipid_dct['[M-(FA2)+H]+_MZ_LOW'] = ppm_window_para((m_exactmass - fa2_exactmass + h_exactmass),
-                                                                   ms2_ppm * -1)
-                lipid_dct['[M-(FA2)+H]+_MZ_HIGH'] = ppm_window_para((m_exactmass - fa2_exactmass + h_exactmass),
-                                                                    ms2_ppm)
-                lipid_dct['[M-(FA2)+H]+_Q'] = (lipid_dct['[M-(FA2)+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
-                    '[M-(FA2)+H]+_MZ_HIGH'].astype(str))
-
-                lipid_dct['[M-(FA3)+H]+_MZ_LOW'] = ppm_window_para((m_exactmass - fa3_exactmass + h_exactmass),
-                                                                   ms2_ppm * -1)
-                lipid_dct['[M-(FA3)+H]+_MZ_HIGH'] = ppm_window_para((m_exactmass - fa3_exactmass + h_exactmass),
-                                                                    ms2_ppm)
-                lipid_dct['[M-(FA3)+H]+_Q'] = (lipid_dct['[M-(FA3)+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
-                    '[M-(FA3)+H]+_MZ_HIGH'].astype(str))
-
-                lipid_dct['[M-(FA1-H2O)+H]+_MZ_LOW'] = ppm_window_para(
-                    (m_exactmass - (fa1_exactmass - nl_water) + h_exactmass), ms2_ppm * -1)
-                lipid_dct['[M-(FA1-H2O)+H]+_MZ_HIGH'] = ppm_window_para(
-                    (m_exactmass - (fa1_exactmass - nl_water) + h_exactmass), ms2_ppm)
-                lipid_dct['[M-(FA1-H2O)+H]+_Q'] = (
-                        lipid_dct['[M-(FA1-H2O)+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
-                    '[M-(FA1-H2O)+H]+_MZ_HIGH'].astype(str))
-
-                lipid_dct['[M-(FA2-H2O)+H]+_MZ_LOW'] = ppm_window_para(
-                    (m_exactmass - (fa2_exactmass - nl_water) + h_exactmass), ms2_ppm * -1)
-                lipid_dct['[M-(FA2-H2O)+H]+_MZ_HIGH'] = ppm_window_para(
-                    (m_exactmass - (fa2_exactmass - nl_water) + h_exactmass), ms2_ppm)
-                lipid_dct['[M-(FA2-H2O)+H]+_Q'] = (
-                        lipid_dct['[M-(FA2-H2O)+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
-                    '[M-(FA2-H2O)+H]+_MZ_HIGH'].astype(str))
-
-                lipid_dct['[M-(FA3-H2O)+H]+_MZ_LOW'] = ppm_window_para(
-                    (m_exactmass - (fa3_exactmass - nl_water) + h_exactmass), ms2_ppm * -1)
-                lipid_dct['[M-(FA3-H2O)+H]+_MZ_HIGH'] = ppm_window_para(
-                    (m_exactmass - (fa3_exactmass - nl_water) + h_exactmass), ms2_ppm)
-                lipid_dct['[M-(FA3-H2O)+H]+_Q'] = (
-                        lipid_dct['[M-(FA3-H2O)+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
-                    '[M-(FA3-H2O)+H]+_MZ_HIGH'].astype(str))
-            # Fragments names when can occur 2 neutral losses of FA. 1 FA with the water and other without
-            mg_str = 'MG'
-            lipid_dct['[MG(FA1)-H2O+H]+_ABBR'] = '[%s(%s)-H2O+H]+' % (mg_str, fa1_abbr)
-            lipid_dct['[MG(FA2)-H2O+H]+_ABBR'] = '[%s(%s)-H2O+H]+' % (mg_str, fa2_abbr)
-            lipid_dct['[MG(FA3)-H2O+H]+_ABBR'] = '[%s(%s)-H2O+H]+' % (mg_str, fa3_abbr)
-
-            lipid_dct['[MG(FA1)-H2O+H]+_MZ'] = round(fa1_exactmass + gly_mg_base_exactmass, 6)
-            lipid_dct['[MG(FA2)-H2O+H]+_MZ'] = round(fa2_exactmass + gly_mg_base_exactmass, 6)
-            lipid_dct['[MG(FA3)-H2O+H]+_MZ'] = round(fa3_exactmass + gly_mg_base_exactmass, 6)
-
-            # TODO (georgia.angelidou@uni-leipzig.de): add the fragments of Na [sodium]
-            # Fragments when there only 1 neutral loss from the TG.
-
-        elif m_class in ['DG']:
-            mg_str = 'MG'
-            lipid_dct['[MG(FA1)-H2O+H]+_ABBR'] = '[%s(%s)-H2O+H]+' % (mg_str, fa1_abbr)
-            lipid_dct['[MG(FA2)-H2O+H]+_ABBR'] = '[%s(%s)-H2O+H]+' % (mg_str, fa2_abbr)
-
-            lipid_dct['[MG(FA1)-H2O+H]+_MZ'] = round(fa1_exactmass + gly_mg_base_exactmass, 6)
-            lipid_dct['[MG(FA2)-H2O+H]+_MZ'] = round(fa2_exactmass + gly_mg_base_exactmass, 6)
-
-            lipid_dct['[MG(FA1)-H2O+H]+_MZ_LOW'] = ppm_window_para((fa1_exactmass + gly_mg_base_exactmass),
-                                                                   ms2_ppm * -1)
-            lipid_dct['[MG(FA1)-H2O+H]+_MZ_HIGH'] = ppm_window_para((fa1_exactmass + gly_mg_base_exactmass), ms2_ppm)
-            lipid_dct['[MG(FA1)-H2O+H]+_Q'] = (
-                    lipid_dct['[MG(FA1)-H2O+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' +
-                    lipid_dct['[MG(FA1)-H2O+H]+_MZ_HIGH'].astype(str))
-
-            lipid_dct['[MG(FA2)-H2O+H]+_MZ_LOW'] = ppm_window_para((fa2_exactmass + gly_mg_base_exactmass),
-                                                                   ms2_ppm * -1)
-            lipid_dct['[MG(FA2)-H2O+H]+_MZ_HIGH'] = ppm_window_para((fa2_exactmass + gly_mg_base_exactmass), ms2_ppm)
-            lipid_dct['[MG(FA2)-H2O+H]+_Q'] = (
-                    lipid_dct['[MG(FA2)-H2O+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' +
-                    lipid_dct['[MG(FA2)-H2O+H]+_MZ_HIGH'].astype(str))
-
-        else:
-            # TODO (georgia.angelidou@uni-leipzig.de: Info for sphingomyelins
-            pass
-
-        return lipid_dct
+    # Delet : will be delete was replace by the above (georgia: 11.10.2019)
+    # @staticmethod
+    # def calc_fragments(lipid_dct, charge='', ms2_ppm=100):
+    #
+    #     # m_formula = lipid_dct['FORMULA']
+    #     m_exactmass = lipid_dct['EXACTMASS']
+    #     m_class = lipid_dct['CLASS']
+    #
+    #     h_exactmass = 1.0078250321
+    #     na_exactmass = 22.98976967
+    #     nh3_exactmass = 3 * 1.0078250321 + 14.0030740052
+    #     ch3_exactmass = 12.0 + 3 * 1.0078250321
+    #     nl_water = 2 * 1.0078250321 + 15.9949146221
+    #     gly_mg_base_exactmass = 3 * 12.0 + 5 * 1.0078250321 + 15.9949146221
+    #     fa1_abbr = lipid_dct['FA1'].strip('FA')
+    #     fa2_abbr = lipid_dct['FA2'].strip('FA')
+    #
+    #     fa1_exactmass = lipid_dct['FA1_EXACTMASS']
+    #     # Note: The reason of the below statement is because of the lyso species they have an FA2 column but no FA2_EXACTMASS (georgia: 14.2.2019)
+    #     if 'FA2_EXACTMASS' in list(lipid_dct.keys()):
+    #         fa2_exactmass = lipid_dct['FA2_EXACTMASS']
+    #
+    #     if m_class in ['PA', 'PE', 'PG', 'PI', 'PS', 'PIP', 'PL']:
+    #
+    #         lyso_str = 'L' + m_class
+    #
+    #         # create the abbreviation name for the Lyso fragments eg. LPE(18:0)-H]-_ABBR
+    #         # without the loss of water
+    #         lipid_dct['[LPL(FA1)-H]-_ABBR'] = '[%s(%s)-H]-' % (lyso_str, fa1_abbr)
+    #         lipid_dct['[LPL(FA2)-H]-_ABBR'] = '[%s(%s)-H]-' % (lyso_str, fa2_abbr)
+    #         # with the loss of water
+    #         lipid_dct['[LPL(FA1)-H2O-H]-_ABBR'] = '[%s(%s)-H2O-H]-' % (lyso_str, fa1_abbr)
+    #         lipid_dct['[LPL(FA2)-H2O-H]-_ABBR'] = '[%s(%s)-H2O-H]-' % (lyso_str, fa2_abbr)
+    #
+    #         # calculation of the exact mass for the different lyso fragments
+    #         lipid_dct['[LPL(FA1)-H]-_MZ'] = round(m_exactmass - (fa2_exactmass - nl_water) - h_exactmass, 6)
+    #         lipid_dct['[LPL(FA2)-H]-_MZ'] = round(m_exactmass - (fa1_exactmass - nl_water) - h_exactmass, 6)
+    #         lipid_dct['[LPL(FA1)-H2O-H]-_MZ'] = round(m_exactmass - fa2_exactmass - h_exactmass, 6)
+    #         lipid_dct['[LPL(FA2)-H2O-H]-_MZ'] = round(m_exactmass - fa1_exactmass - h_exactmass, 6)
+    #
+    #     elif m_class in ['PC']:
+    #
+    #         lyso_str = 'L' + m_class
+    #         # The abbr. here is not exactly correct due to the compatibility issues with ranks core calc functions
+    #         lipid_dct['[LPL(FA1)-H]-_ABBR'] = '[%s(%s)-CH3]-' % (lyso_str, fa1_abbr)
+    #         lipid_dct['[LPL(FA2)-H]-_ABBR'] = '[%s(%s)-CH3]-' % (lyso_str, fa2_abbr)
+    #         lipid_dct['[LPL(FA1)-H2O-H]-_ABBR'] = '[%s(%s)-H2O-CH3]-' % (lyso_str, fa1_abbr)
+    #         lipid_dct['[LPL(FA2)-H2O-H]-_ABBR'] = '[%s(%s)-H2O-CH3]-' % (lyso_str, fa2_abbr)
+    #
+    #         lipid_dct['[LPL(FA1)-H]-_MZ'] = round(m_exactmass - (fa2_exactmass - nl_water) - ch3_exactmass, 6)
+    #         lipid_dct['[LPL(FA2)-H]-_MZ'] = round(m_exactmass - (fa1_exactmass - nl_water) - ch3_exactmass, 6)
+    #         lipid_dct['[LPL(FA1)-H2O-H]-_MZ'] = round(m_exactmass - fa2_exactmass - ch3_exactmass, 6)
+    #         lipid_dct['[LPL(FA2)-H2O-H]-_MZ'] = round(m_exactmass - fa1_exactmass - ch3_exactmass, 6)
+    #
+    #     elif m_class in ['LPA', 'LPE', 'LPG', 'LPI', 'LPS', 'LPIP', 'LPL']:
+    #         pass
+    #
+    #     elif m_class in ['LPC']:
+    #         pass
+    #
+    #     elif m_class in ['TG']:
+    #         # Here maybe should get the DG fragments
+    #         # TODO(georgia.angelidou@uni-leipzig.de): create the section for theuniue fragments when there is TG
+    #         #   Missing the fragments for the sodium adduct
+    #
+    #         # The different frgments for triacylglycerol names when neutral loss of the FA
+    #         # Take the correspond information of the 3 FA
+    #         fa3_abbr = lipid_dct['FA3'].strip('FA')
+    #         fa3_exactmass = lipid_dct['FA3_EXACTMASS']
+    #         dg_str = 'M'
+    #         if charge in ['[M+Na]+']:
+    #             fa1_Na_exactmass = lipid_dct['FA1_[FA-H+Na]_MZ']
+    #             fa2_Na_exactmass = lipid_dct['FA2_[FA-H+Na]_MZ']
+    #             fa3_Na_exactmass = lipid_dct['FA3_[FA-H+Na]_MZ']
+    #
+    #             lipid_dct['[M-(FA1)+Na]+_ABBR'] = '[%s-FA%s+Na]+' % (dg_str, fa1_abbr)
+    #             lipid_dct['[M-(FA2)+Na]+_ABBR'] = '[%s-FA%s+Na]+' % (dg_str, fa2_abbr)
+    #             lipid_dct['[M-(FA3)+Na]+_ABBR'] = '[%s-FA%s+Na]+' % (dg_str, fa3_abbr)
+    #
+    #             lipid_dct['[M-(FA1-H+Na)+H]+_ABBR'] = '[%s-(FA%s-H+Na)+H]+' % (dg_str, fa1_abbr)
+    #             lipid_dct['[M-(FA2-H+Na)+H]+_ABBR'] = '[%s-(FA%s-H+Na)+H]+' % (dg_str, fa2_abbr)
+    #             lipid_dct['[M-(FA3-H+Na)+H]+_ABBR'] = '[%s-(FA%s-H+Na)+H]+' % (dg_str, fa3_abbr)
+    #
+    #             lipid_dct['[M-(FA1)+Na]+_MZ'] = round(m_exactmass - fa1_exactmass + na_exactmass, 6)
+    #             lipid_dct['[M-(FA2)+Na]+_MZ'] = round(m_exactmass - fa2_exactmass + na_exactmass, 6)
+    #             lipid_dct['[M-(FA3)+Na]+_MZ'] = round(m_exactmass - fa3_exactmass + na_exactmass, 6)
+    #
+    #             lipid_dct['[M-(FA1-H+Na)+H]+_MZ'] = round(m_exactmass - fa1_Na_exactmass + na_exactmass, 6)
+    #             lipid_dct['[M-(FA2-H+Na)+H]+_MZ'] = round(m_exactmass - fa2_Na_exactmass + na_exactmass, 6)
+    #             lipid_dct['[M-(FA3-H+Na)+H]+_MZ'] = round(m_exactmass - fa3_Na_exactmass + na_exactmass, 6)
+    #
+    #             lipid_dct['[M-(FA1)+Na]+_MZ_LOW'] = ppm_window_para((m_exactmass - (fa1_exactmass) + na_exactmass),
+    #                                                                 ms2_ppm * -1)
+    #             lipid_dct['[M-(FA1)+Na]+_MZ_HIGH'] = ppm_window_para((m_exactmass - (fa1_exactmass) + na_exactmass),
+    #                                                                  ms2_ppm)
+    #             lipid_dct['[M-(FA1)+Na]+_Q'] = (
+    #                     lipid_dct['[M-(FA1)+Na]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
+    #                 '[M-(FA1)+Na]+_MZ_HIGH'].astype(str))
+    #
+    #             lipid_dct['[M-(FA2)+Na]+_MZ_LOW'] = ppm_window_para((m_exactmass - (fa2_exactmass) + na_exactmass),
+    #                                                                 ms2_ppm * -1)
+    #             lipid_dct['[M-(FA2)+Na]+_MZ_HIGH'] = ppm_window_para((m_exactmass - (fa2_exactmass) + na_exactmass),
+    #                                                                  ms2_ppm)
+    #             lipid_dct['[M-(FA2)+Na]+_Q'] = (
+    #                     lipid_dct['[M-(FA2)+Na]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
+    #                 '[M-(FA2)+Na]+_MZ_HIGH'].astype(str))
+    #
+    #             lipid_dct['[M-(FA3)+Na]+_MZ_LOW'] = ppm_window_para((m_exactmass - (fa3_exactmass) + na_exactmass),
+    #                                                                 ms2_ppm * -1)
+    #             lipid_dct['[M-(FA3)+Na]+_MZ_HIGH'] = ppm_window_para((m_exactmass - (fa3_exactmass) + na_exactmass),
+    #                                                                  ms2_ppm)
+    #             lipid_dct['[M-(FA3)+Na]+_Q'] = (
+    #                     lipid_dct['[M-(FA3)+Na]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
+    #                 '[M-(FA3)+Na]+_MZ_HIGH'].astype(str))
+    #
+    #             lipid_dct['[M-(FA1-H+Na)+H]+_MZ_LOW'] = ppm_window_para(
+    #                 (m_exactmass - (fa1_Na_exactmass) + na_exactmass), ms2_ppm * -1)
+    #             lipid_dct['[M-(FA1-H+Na)+H]+_MZ_HIGH'] = ppm_window_para(
+    #                 (m_exactmass - (fa1_Na_exactmass) + na_exactmass), ms2_ppm)
+    #             lipid_dct['[M-(FA1-H+Na)+H]+_Q'] = (
+    #                     lipid_dct['[M-(FA1-H+Na)+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
+    #                 '[M-(FA1-H+Na)+H]+_MZ_HIGH'].astype(str))
+    #
+    #             lipid_dct['[M-(FA2-H+Na)+H]+_MZ_LOW'] = ppm_window_para(
+    #                 (m_exactmass - (fa2_Na_exactmass) + na_exactmass), ms2_ppm * -1)
+    #             lipid_dct['[M-(FA2-H+Na)+H]+_MZ_HIGH'] = ppm_window_para(
+    #                 (m_exactmass - (fa2_Na_exactmass) + na_exactmass), ms2_ppm)
+    #             lipid_dct['[M-(FA2-H+Na)+H]+_Q'] = (
+    #                     lipid_dct['[M-(FA2-H+Na)+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
+    #                 '[M-(FA2-H+Na)+H]+_MZ_HIGH'].astype(str))
+    #
+    #             lipid_dct['[M-(FA3-H+Na)+H]+_MZ_LOW'] = ppm_window_para(
+    #                 (m_exactmass - (fa3_Na_exactmass) + na_exactmass), ms2_ppm * -1)
+    #             lipid_dct['[M-(FA3-H+Na)+H]+_MZ_HIGH'] = ppm_window_para(
+    #                 (m_exactmass - (fa3_Na_exactmass) + na_exactmass), ms2_ppm)
+    #             lipid_dct['[M-(FA3-H+Na)+H]+_Q'] = (
+    #                     lipid_dct['[M-(FA3-H+Na)+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
+    #                 '[M-(FA3-H+Na)+H]+_MZ_HIGH'].astype(str))
+    #         else:
+    #             # Neutral loss of a FA with a water
+    #             lipid_dct['[M-(FA1)+H]+_ABBR'] = '[%s-FA%s+H]+' % (dg_str, fa1_abbr)
+    #             lipid_dct['[M-(FA2)+H]+_ABBR'] = '[%s-FA%s+H]+' % (dg_str, fa2_abbr)
+    #             lipid_dct['[M-(FA3)+H]+_ABBR'] = '[%s-FA%s+H]+' % (dg_str, fa3_abbr)
+    #             # Neutral loss of a FA minus a water
+    #             lipid_dct['[M-(FA1-H2O)+H]+_ABBR'] = '[%s-(FA%s-H2O)+H]+' % (dg_str, fa1_abbr)
+    #             lipid_dct['[M-(FA2-H2O)+H]+_ABBR'] = '[%s-(FA%s-H2O)+H]+' % (dg_str, fa2_abbr)
+    #             lipid_dct['[M-(FA3-H2O)+H]+_ABBR'] = '[%s-(FA%s-H2O)+H]+' % (dg_str, fa3_abbr)
+    #
+    #             lipid_dct['[M-(FA1)+H]+_MZ'] = round(m_exactmass - fa1_exactmass + h_exactmass, 6)
+    #             lipid_dct['[M-(FA2)+H]+_MZ'] = round(m_exactmass - fa2_exactmass + h_exactmass, 6)
+    #             lipid_dct['[M-(FA3)+H]+_MZ'] = round(m_exactmass - fa3_exactmass + h_exactmass, 6)
+    #
+    #             lipid_dct['[M-(FA1-H2O)+H]+_MZ'] = round(m_exactmass - (fa1_exactmass - nl_water) + h_exactmass, 6)
+    #             lipid_dct['[M-(FA2-H2O)+H]+_MZ'] = round(m_exactmass - (fa2_exactmass - nl_water) + h_exactmass, 6)
+    #             lipid_dct['[M-(FA3-H2O)+H]+_MZ'] = round(m_exactmass - (fa3_exactmass - nl_water) + h_exactmass, 6)
+    #
+    #             lipid_dct['[MG(FA1)-H2O+H]+_MZ_LOW'] = ppm_window_para((fa1_exactmass + gly_mg_base_exactmass),
+    #                                                                    ms2_ppm * -1)
+    #             lipid_dct['[MG(FA1)-H2O+H]+_MZ_HIGH'] = ppm_window_para((fa1_exactmass + gly_mg_base_exactmass),
+    #                                                                     ms2_ppm)
+    #             lipid_dct['[MG(FA1)-H2O+H]+_Q'] = (
+    #                     lipid_dct['[MG(FA1)-H2O+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' +
+    #                     lipid_dct['[MG(FA1)-H2O+H]+_MZ_HIGH'].astype(str))
+    #
+    #             lipid_dct['[MG(FA2)-H2O+H]+_MZ_LOW'] = ppm_window_para((fa2_exactmass + gly_mg_base_exactmass),
+    #                                                                    ms2_ppm * -1)
+    #             lipid_dct['[MG(FA2)-H2O+H]+_MZ_HIGH'] = ppm_window_para((fa2_exactmass + gly_mg_base_exactmass),
+    #                                                                     ms2_ppm)
+    #             lipid_dct['[MG(FA2)-H2O+H]+_Q'] = (
+    #                     lipid_dct['[MG(FA2)-H2O+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' +
+    #                     lipid_dct['[MG(FA2)-H2O+H]+_MZ_HIGH'].astype(str))
+    #
+    #             lipid_dct['[MG(FA3)-H2O+H]+_MZ_LOW'] = ppm_window_para((fa3_exactmass + gly_mg_base_exactmass),
+    #                                                                    ms2_ppm * -1)
+    #             lipid_dct['[MG(FA3)-H2O+H]+_MZ_HIGH'] = ppm_window_para((fa3_exactmass + gly_mg_base_exactmass),
+    #                                                                     ms2_ppm)
+    #             lipid_dct['[MG(FA3)-H2O+H]+_Q'] = (
+    #                     lipid_dct['[MG(FA3)-H2O+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' +
+    #                     lipid_dct['[MG(FA3)-H2O+H]+_MZ_HIGH'].astype(str))
+    #
+    #             lipid_dct['[M-(FA1)+H]+_MZ_LOW'] = ppm_window_para((m_exactmass - fa1_exactmass + h_exactmass),
+    #                                                                ms2_ppm * -1)
+    #             lipid_dct['[M-(FA1)+H]+_MZ_HIGH'] = ppm_window_para((m_exactmass - fa1_exactmass + h_exactmass),
+    #                                                                 ms2_ppm)
+    #             lipid_dct['[M-(FA1)+H]+_Q'] = (lipid_dct['[M-(FA1)+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
+    #                 '[M-(FA1)+H]+_MZ_HIGH'].astype(str))
+    #
+    #             lipid_dct['[M-(FA2)+H]+_MZ_LOW'] = ppm_window_para((m_exactmass - fa2_exactmass + h_exactmass),
+    #                                                                ms2_ppm * -1)
+    #             lipid_dct['[M-(FA2)+H]+_MZ_HIGH'] = ppm_window_para((m_exactmass - fa2_exactmass + h_exactmass),
+    #                                                                 ms2_ppm)
+    #             lipid_dct['[M-(FA2)+H]+_Q'] = (lipid_dct['[M-(FA2)+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
+    #                 '[M-(FA2)+H]+_MZ_HIGH'].astype(str))
+    #
+    #             lipid_dct['[M-(FA3)+H]+_MZ_LOW'] = ppm_window_para((m_exactmass - fa3_exactmass + h_exactmass),
+    #                                                                ms2_ppm * -1)
+    #             lipid_dct['[M-(FA3)+H]+_MZ_HIGH'] = ppm_window_para((m_exactmass - fa3_exactmass + h_exactmass),
+    #                                                                 ms2_ppm)
+    #             lipid_dct['[M-(FA3)+H]+_Q'] = (lipid_dct['[M-(FA3)+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
+    #                 '[M-(FA3)+H]+_MZ_HIGH'].astype(str))
+    #
+    #             lipid_dct['[M-(FA1-H2O)+H]+_MZ_LOW'] = ppm_window_para(
+    #                 (m_exactmass - (fa1_exactmass - nl_water) + h_exactmass), ms2_ppm * -1)
+    #             lipid_dct['[M-(FA1-H2O)+H]+_MZ_HIGH'] = ppm_window_para(
+    #                 (m_exactmass - (fa1_exactmass - nl_water) + h_exactmass), ms2_ppm)
+    #             lipid_dct['[M-(FA1-H2O)+H]+_Q'] = (
+    #                     lipid_dct['[M-(FA1-H2O)+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
+    #                 '[M-(FA1-H2O)+H]+_MZ_HIGH'].astype(str))
+    #
+    #             lipid_dct['[M-(FA2-H2O)+H]+_MZ_LOW'] = ppm_window_para(
+    #                 (m_exactmass - (fa2_exactmass - nl_water) + h_exactmass), ms2_ppm * -1)
+    #             lipid_dct['[M-(FA2-H2O)+H]+_MZ_HIGH'] = ppm_window_para(
+    #                 (m_exactmass - (fa2_exactmass - nl_water) + h_exactmass), ms2_ppm)
+    #             lipid_dct['[M-(FA2-H2O)+H]+_Q'] = (
+    #                     lipid_dct['[M-(FA2-H2O)+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
+    #                 '[M-(FA2-H2O)+H]+_MZ_HIGH'].astype(str))
+    #
+    #             lipid_dct['[M-(FA3-H2O)+H]+_MZ_LOW'] = ppm_window_para(
+    #                 (m_exactmass - (fa3_exactmass - nl_water) + h_exactmass), ms2_ppm * -1)
+    #             lipid_dct['[M-(FA3-H2O)+H]+_MZ_HIGH'] = ppm_window_para(
+    #                 (m_exactmass - (fa3_exactmass - nl_water) + h_exactmass), ms2_ppm)
+    #             lipid_dct['[M-(FA3-H2O)+H]+_Q'] = (
+    #                     lipid_dct['[M-(FA3-H2O)+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' + lipid_dct[
+    #                 '[M-(FA3-H2O)+H]+_MZ_HIGH'].astype(str))
+    #         # Fragments names when can occur 2 neutral losses of FA. 1 FA with the water and other without
+    #         mg_str = 'MG'
+    #         lipid_dct['[MG(FA1)-H2O+H]+_ABBR'] = '[%s(%s)-H2O+H]+' % (mg_str, fa1_abbr)
+    #         lipid_dct['[MG(FA2)-H2O+H]+_ABBR'] = '[%s(%s)-H2O+H]+' % (mg_str, fa2_abbr)
+    #         lipid_dct['[MG(FA3)-H2O+H]+_ABBR'] = '[%s(%s)-H2O+H]+' % (mg_str, fa3_abbr)
+    #
+    #         lipid_dct['[MG(FA1)-H2O+H]+_MZ'] = round(fa1_exactmass + gly_mg_base_exactmass, 6)
+    #         lipid_dct['[MG(FA2)-H2O+H]+_MZ'] = round(fa2_exactmass + gly_mg_base_exactmass, 6)
+    #         lipid_dct['[MG(FA3)-H2O+H]+_MZ'] = round(fa3_exactmass + gly_mg_base_exactmass, 6)
+    #
+    #         # TODO (georgia.angelidou@uni-leipzig.de): add the fragments of Na [sodium]
+    #         # Fragments when there only 1 neutral loss from the TG.
+    #
+    #     elif m_class in ['DG']:
+    #         mg_str = 'MG'
+    #         lipid_dct['[MG(FA1)-H2O+H]+_ABBR'] = '[%s(%s)-H2O+H]+' % (mg_str, fa1_abbr)
+    #         lipid_dct['[MG(FA2)-H2O+H]+_ABBR'] = '[%s(%s)-H2O+H]+' % (mg_str, fa2_abbr)
+    #
+    #         lipid_dct['[MG(FA1)-H2O+H]+_MZ'] = round(fa1_exactmass + gly_mg_base_exactmass, 6)
+    #         lipid_dct['[MG(FA2)-H2O+H]+_MZ'] = round(fa2_exactmass + gly_mg_base_exactmass, 6)
+    #
+    #         lipid_dct['[MG(FA1)-H2O+H]+_MZ_LOW'] = ppm_window_para((fa1_exactmass + gly_mg_base_exactmass),
+    #                                                                ms2_ppm * -1)
+    #         lipid_dct['[MG(FA1)-H2O+H]+_MZ_HIGH'] = ppm_window_para((fa1_exactmass + gly_mg_base_exactmass), ms2_ppm)
+    #         lipid_dct['[MG(FA1)-H2O+H]+_Q'] = (
+    #                 lipid_dct['[MG(FA1)-H2O+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' +
+    #                 lipid_dct['[MG(FA1)-H2O+H]+_MZ_HIGH'].astype(str))
+    #
+    #         lipid_dct['[MG(FA2)-H2O+H]+_MZ_LOW'] = ppm_window_para((fa2_exactmass + gly_mg_base_exactmass),
+    #                                                                ms2_ppm * -1)
+    #         lipid_dct['[MG(FA2)-H2O+H]+_MZ_HIGH'] = ppm_window_para((fa2_exactmass + gly_mg_base_exactmass), ms2_ppm)
+    #         lipid_dct['[MG(FA2)-H2O+H]+_Q'] = (
+    #                 lipid_dct['[MG(FA2)-H2O+H]+_MZ_LOW'].astype(str) + ' <= mz <= ' +
+    #                 lipid_dct['[MG(FA2)-H2O+H]+_MZ_HIGH'].astype(str))
+    #
+    #     else:
+    #         # TODO (georgia.angelidou@uni-leipzig.de: Info for sphingomyelins
+    #         pass
+    #
+    #     return lipid_dct
 
     # Note: Get also the usr_fa_df (georgia: 20.2.2019)
     def compose_lipid(self, param_dct, usr_fa_info_df, ms2_ppm=100):
@@ -963,16 +993,17 @@ class LipidComposer:
         # else:
         #     return False
         print('[INFO] --> FA white list loaded ...')
-        lipid_comb_dct = self.gen_all_comb(lipid_class, usr_fa_df, position=position_set)
+        lipid_comb_dct = self.gen_all_comb(lipid_class, usr_fa_df, position_set)
 
         lipid_info_dct = {}
 
         abbr_parser = NameParserFA()
         elem_calc = ElemCalc()
 
-        fa_header_lst = NameParserFA().lipid_fa_dct[lipid_class][1]
-        if NameParserFA().lipid_fa_dct[lipid_class][2] is not None:
-            fa_header_lst = [NameParserFA().lipid_fa_dct[lipid_class][2]] + fa_header_lst
+        fa_header_lst = NameParserFA(lipid_class).lipid_fa_dct[lipid_class][1]
+        # Comment: can be deleted
+        # if NameParserFA().lipid_fa_dct[lipid_class][2] is not None:
+        #     fa_header_lst = [NameParserFA().lipid_fa_dct[lipid_class][2]] + fa_header_lst
 
         for _lipid in list(lipid_comb_dct.keys()):
             _lipid_dct = lipid_comb_dct[_lipid]
@@ -1024,7 +1055,8 @@ class LipidComposer:
                 _fa_lipid = usr_fa_info_df.loc[_lipid_dct[f_k]]
                 for _fa_k in list(_fa_lipid.keys()):
                     # Note: Use a filter so it would not take values that are NAN (georgia: 21.2.2019)
-                    _lipid_dct[str(f_k) + '_' + str(_fa_k)] = _fa_lipid[_fa_k]
+                    if _fa_lipid[_fa_k] is not np.nan:
+                        _lipid_dct[str(f_k) + '_' + str(_fa_k)] = _fa_lipid[_fa_k]
                 _lipid_dct['M_DB'] = int(_lipid_dct['M_DB']) + int(_fa_lipid['DB'])
                 _lipid_dct['M_C'] = int(_lipid_dct['M_C']) + int(_fa_lipid['C'])
 
@@ -1034,6 +1066,12 @@ class LipidComposer:
                 lipid_bulk_str = '{pl}({c}:{db})'.format(pl=lipid_class,
                                                          c=_lipid_dct['M_C'],
                                                          db=_lipid_dct['M_DB'])
+            elif usr_fa_info_df.loc[_lipid_dct[fa_header_lst[0]]]['LINK'] in ['SPB']:
+                # Comment: This will not work in the case of alpha hydroxylated FA
+                lipid_bulk_str = '{pl}({c}:{db};{o})'.format(pl=lipid_class,
+                                                             c=_lipid_dct['M_C'],
+                                                             db=_lipid_dct['M_DB'],
+                                                             o= _lipid_dct['FA1_O'])
             else:
                 lipid_bulk_str = '{pl}({lk}{c}:{db})'.format(pl=lipid_class,
                                                              lk= _lipid_dct[fa_header_lst[0]+'_'+'LINK'],
@@ -1121,10 +1159,10 @@ class LipidComposer:
             _lipid_dct[lipid_charge + '_MZ'] = elem_calc.get_exactmass(_chg_lipid_elem_dct)
 
             # fragments
-            if lipid_class in ['Cer', 'TG']:
-                _lipid_dct = self.calc_fragments_geo(_lipid_dct, charge=lipid_charge, ms2_ppm=ms2_ppm)
-            else:
-                _lipid_dct = self.calc_fragments(_lipid_dct, charge=lipid_charge, ms2_ppm=ms2_ppm)
+            # if lipid_class in ['Cer', 'TG']:
+            _lipid_dct = self.calc_fragments_geo(_lipid_dct, charge=lipid_charge, ms2_ppm=ms2_ppm)
+            # else:
+            #     _lipid_dct = self.calc_fragments(_lipid_dct, charge=lipid_charge, ms2_ppm=ms2_ppm)
 
             # Question: for what reason is needed this table (georgia: 13.2.2019)
             lipid_info_dct[_lipid] = _lipid_dct
@@ -1139,7 +1177,7 @@ class LipidComposer:
 
 if __name__ == '__main__':
     # TODO (georgia.angelidou@uni-leipzig.de): Upgrade to ceramide lipid composition
-    fa_lst_file = r'../ConfigurationFiles/1-FA_Whitelist_cER_v2.xlsx'
+    fa_lst_file = r'../ConfigurationFiles/1-FA_Whitelist_cER.xlsx'
     # fa_lst_file = r'../ConfigurationFiles/1-FA_Whitelist_TG-DG.xlsx'
 
     # Note:
@@ -1151,24 +1189,24 @@ if __name__ == '__main__':
     # usr_param_dct = {'fa_whitelist': fa_lst_file, 'lipid_class': 'Cer', 'charge_mode': '[M+H]+',
     #                  'exact_position': 'FALSE'}
 
-    usr_param_dct = {'fa_whitelist': fa_lst_file, 'lipid_class': 'Cer', 'charge_mode': '[M+H]+',
+    usr_param_dct = {'fa_whitelist': fa_lst_file, 'lipid_class': 'LPC', 'charge_mode': '[M+HCOO]-',
                      'exact_position': 'FALSE'}
     # usr_param_dct = {'fa_whitelist': fa_lst_file, 'lipid_class': 'TG', 'charge_mode': '[M+NH4]+',
     #                  'exact_position': 'FALSE'}
 
     composer = LipidComposer()
-    # calc_fa_df = composer.calc_fa_query(usr_param_dct['lipid_class'], usr_param_dct['charge_mode'],
-    #                                     fa_lst_file, ms2_ppm=50)
-    # usr_lipid_master_df = composer.compose_lipid(usr_param_dct,  calc_fa_df,  ms2_ppm=30)
-    # print('[INFO] --> Lipid Master Table generated...')
-    # master_csv = r'../Temp/LipidMaster_Whitelist_%s.csv' % usr_param_dct['lipid_class']
-    # usr_lipid_master_df.to_csv(master_csv)
-    # # master_csv = r'../Temp/LipidMaster_Whitelist_TG_ML.csv'
+    calc_fa_df = composer.calc_fa_query(usr_param_dct['lipid_class'], usr_param_dct['charge_mode'],
+                                        fa_lst_file, ms2_ppm=50)
+    usr_lipid_master_df = composer.compose_lipid(usr_param_dct,  calc_fa_df,  ms2_ppm=30)
+    print('[INFO] --> Lipid Master Table generated...')
+    master_csv = r'../Temp/LipidMaster_Whitelist_%s.csv' % usr_param_dct['lipid_class']
+    usr_lipid_master_df.to_csv(master_csv)
+    # master_csv = r'../Temp/LipidMaster_Whitelist_TG_ML.csv'
 
     fa_csv = r'../Temp/LipidMaster_FAlist2_%s.csv' % usr_param_dct['lipid_class']
 
-    calc_fa_df = composer.calc_fa_query(usr_param_dct['lipid_class'], usr_param_dct['charge_mode'],
-                                        fa_lst_file, ms2_ppm=50)
+    # calc_fa_df = composer.calc_fa_query(usr_param_dct['lipid_class'], usr_param_dct['charge_mode'],
+    #                                     fa_lst_file, ms2_ppm=50)
 
     if calc_fa_df is False:
         print('[ERROR] !!! Failed to generate FA info table ...\n')

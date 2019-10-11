@@ -55,7 +55,9 @@ class NameParserFA:
         self.fa_rgx = re.compile(r'([a-zA-z\-]{1,3})(\d{1,2})(:)(\d)(;)*(\d)*')
 
         neg_gen = ['[FA-H]-', '[FA-H2O]', '[FA-H2O-H]-']
+        neg_gen3 = ['[LPL(FA)-H]-', '[LPL(FA)-H2O-H]-']
         neg_gen2 = ['[x-H]-', '[x-H2O-H]-']
+        pc_neg2 = ['[LPL(FA)-CH3]-', '[LPL(FA)-H2O-CH3]-']
         pc_neg = ['[x-CH3]-', '[x-H2O-CH3]-']
         # Note: MG fragment can be move to the pos_gen or to pos_gen2 (georgia: 22.2.2019)
         pos_gen = ['[FA-H2O+H]+', '[FA-H2O]']
@@ -66,7 +68,7 @@ class NameParserFA:
         sodium_spec = ['[FA-H+Na]']
         sodium_spec2 = ['[x-H+Na]']
         cer_base_spec = ['[LCB+H]+','[LCB-H2O+H]+', '[LCB-2xH2O+H]+', '[LCB-H2O-CH2O+H]+', '[LCB-3xH2O+H]+', '[LCB-2xH2O-CH2O+H]+']
-        cer_base_spec2 = ['[x-H2O+H]+', '[x-2xH2O+H]+', '[x-H2O-CH2O+H]+', '[x-3xH2O+H]+', '[x-2xH2O-CH2O+H]+']
+        cer_base_spec2 = ['[X-H2O+H]+', '[X-2xH2O+H]+', '[X-H2O-CH2O+H]+', '[X-3xH2O+H]+', '[X-2xH2O-CH2O+H]+']
         cer_fa_spec = ['[FA-OH+NH3]+', '[FA-OH+C2H3N]+']
         cer_fa_spec2 = ['[x-OH+NH3]+', '[x-OH+C2H3N]+']
 
@@ -84,6 +86,13 @@ class NameParserFA:
                          '[LCB-3xH2O+H]+': -(self.elem_dct['H'][0] * 5 + self.elem_dct['O'][0] * 3),
                          '[LCB-2xH2O-CH2O+H]+': -(
                                      self.elem_dct['H'][0] * 5 + self.elem_dct['O'][0] * 3 + self.elem_dct['C'][0]),
+                         '[X-H2O+H]+': -(self.elem_dct['H'][0] + self.elem_dct['O'][0]),
+                         '[X-2xH2O+H]+': -(self.elem_dct['H'][0] * 3 + self.elem_dct['O'][0] * 2),
+                         '[X-H2O-CH2O+H]+': -(self.elem_dct['H'][0] * 3 + self.elem_dct['O'][0] * 2 +
+                                                self.elem_dct['C'][0]),
+                         '[X-3xH2O+H]+': -(self.elem_dct['H'][0] * 5 + self.elem_dct['O'][0] * 3),
+                         '[X-2xH2O-CH2O+H]+': -(
+                                 self.elem_dct['H'][0] * 5 + self.elem_dct['O'][0] * 3 + self.elem_dct['C'][0]),
                          '[FA-OH+NH3]+': self.elem_dct['N'][0] + self.elem_dct['H'][0]*2 - self.elem_dct['O'][0],
                          '[FA-OH+C2H3N]+': (self.elem_dct['C'][0] + self.elem_dct['N'][0] + self.elem_dct['H'][0]*2 -
                                             self.elem_dct['O'][0]),
@@ -104,8 +113,22 @@ class NameParserFA:
                                          - self.elem_dct['H'][0]*3,
                          '[x-H2O+H]+': self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct) + self.elem_dct['H'][0]*3
                                        + self.elem_dct['O'][0],
+                         '[LPL(FA)-H]-': self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
+                                   + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)
+                                   + self.elem_dct['H'][0] + self.elem_dct['O'][0],
+                         '[LPL(FA)-H2O-H]-': self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
+                                       + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)
+                                       - self.elem_dct['H'][0],
+                         '[LPL(FA)-CH3]-': self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
+                                     + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)
+                                     - self.elem_dct['H'][0] + self.elem_dct['O'][0] - self.elem_dct['C'][0],
+                         '[LPL(FA)-H2O-CH3]-': self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
+                                         + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct) - self.elem_dct['C'][0]
+                                         - self.elem_dct['H'][0] * 3,
                          '[M-(FA)+H]+': self.elem_dct['H'][0],
-                         '[M-(FA-H2O)+H]+': self.elem_dct['H'][0]*3 + self.elem_dct['O'][0]}
+                         '[M-(FA-H2O)+H]+': self.elem_dct['H'][0]*3 + self.elem_dct['O'][0],
+                         '[M-(FA)+Na]+': self.elem_dct['Na'][0],
+                         '[M-(FA-H+Na)+H]+': self.elem_dct['H'][0]}
         # Note: the reason that i cannot use the above is because of the adiotion of glycerol bone or head (georgia: 21.2.2019)
         # Note: Need to find a more unify way who to do this (georgia: 21.2.2019)
         # Note: one solution is to put the above in a list where the first cell is the loss and the other the additional fragments info (eg glycerol) (georgia: 21.2.2019)
@@ -138,33 +161,47 @@ class NameParserFA:
                           '[x-H2O-CH3]-': [ -self.elem_dct['C'][0] - self.elem_dct['H'][0] * 3,
                                            self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
                                          + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)],
+                          '[LPL(FA)-H]-': [self.elem_dct['H'][0] + self.elem_dct['O'][0],
+                                     self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
+                                     + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)],
+                          '[LPL(FA)-H2O-H]-': [-self.elem_dct['H'][0], self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
+                                         + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)],
+                          '[LPL(FA)-CH3]-': [-self.elem_dct['H'][0] + self.elem_dct['O'][0] - self.elem_dct['C'][0],
+                                       self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
+                                       + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)],
+                          '[LPL(FA)-H2O-CH3]-': [-self.elem_dct['C'][0] - self.elem_dct['H'][0] * 3,
+                                           self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
+                                           + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)],
                           '[x-H2O+H]+': [self.elem_dct['H'][0] * 3 + self.elem_dct['O'][0],
                                         self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)]}
 
 
 
 
-        self.lipid_mode_dct = {'PA': {'[M-H]-': [neg_gen, neg_gen2, 'LPA', neg_gen2, 'LPL']},
-                               'PC': {'[M+HCOO]-': [neg_gen, pc_neg, 'LPC', neg_gen2, 'LPL'],
-                                      '[M+CH3COO]-': [neg_gen, pc_neg, 'LPC', neg_gen2, 'LPL']},
-                               'PE': {'[M-H]-': [neg_gen, neg_gen2, 'LPE', neg_gen2, 'LPL']},
-                               'PG': {'[M-H]-': [neg_gen, neg_gen2, 'LPG', neg_gen2, 'LPL']},
-                               'PI': {'[M-H]-': [neg_gen, neg_gen2, 'LPI', neg_gen2, 'LPL']},
-                               'PS': {'[M-H]-': [neg_gen, neg_gen2, 'LPS', neg_gen2, 'LPL']},
-                               'TG': {'[M+NH4]+': [pos_gen, pos_gen2, 'MG', pos_gen_the, None],
-                                      '[M+H]+': [pos_gen, pos_gen2, 'MG', pos_gen_the, None],
-                                      '[M+Na]+': [(pos_gen + sodium_spec), pos_gen2, 'MG', pos_sod_gen_the , None]},
+        self.lipid_mode_dct = {'PA': {'[M-H]-': [neg_gen, neg_gen2, 'LPA', None, 'LPL']}, # neg_gen2
+                               'PC': {'[M+HCOO]-': [neg_gen, pc_neg, 'LPC', None, 'LPL'],    # pc_neg
+                                      '[M+CH3COO]-': [neg_gen, pc_neg, 'LPC', None, 'LPL']},    # neg_gen2
+                               'PE': {'[M-H]-': [neg_gen, neg_gen2, 'LPE', None, 'LPL']},   # neg_gen2
+                               'PG': {'[M-H]-': [neg_gen, neg_gen2, 'LPG', None, 'LPL']},   # neg_gen2
+                               'PI': {'[M-H]-': [neg_gen, neg_gen2, 'LPI', None, 'LPL']},   # neg_gen2
+                               'PS': {'[M-H]-': [neg_gen, neg_gen2, 'LPS', None, 'LPL']},   # neg_gen2
+                               'TG': {'[M+NH4]+': [pos_gen, pos_gen2, 'MG', None, None],    # pos_gen_theo
+                                      '[M+H]+': [pos_gen, pos_gen2, 'MG', None, None],  # pos_gen_theo
+                                      '[M+Na]+': [(pos_gen + sodium_spec), pos_gen2, 'MG', None , None]},
                                'DG': {'[M+NH4]+': [pos_gen, pos_gen2, 'MG', None, None]},
-                               'LPA': {'[M-H]-': [neg_gen, neg_gen2, lclass, None, None]},
-                               'LPC': {'[M+HCOO]-': [neg_gen, neg_gen2, lclass, None, None],
-                                       '[M+CH3COO]-': [neg_gen, neg_gen2, lclass, None, None]},
-                               'LPE': {'[M-H]-': [neg_gen, neg_gen2, lclass, None, None]},
-                               'LPG': {'[M-H]-': [neg_gen, neg_gen2, lclass, None, None]},
-                               'LPI': {'[M-H]-': [neg_gen, neg_gen2, lclass, None, None]},
-                               'LPS': {'[M-H]-': [neg_gen, neg_gen2, lclass, None, None]},
-                               'Cer': {'[M+H]+': [cer_base_spec, cer_fa_spec, 'LCB', None, None]}}
+                               'LPA': {'[M-H]-': [neg_gen, neg_gen2, 'LPA', None, None]},
+                               'LPC': {'[M+HCOO]-': [neg_gen, neg_gen2, 'LPC', None, None],
+                                       '[M+CH3COO]-': [neg_gen, neg_gen2, 'LPC', None, None]},
+                               'LPE': {'[M-H]-': [neg_gen, neg_gen2, 'LPE', None, None]},
+                               'LPG': {'[M-H]-': [neg_gen, neg_gen2, 'LPG', None, None]},
+                               'LPI': {'[M-H]-': [neg_gen, neg_gen2, 'LPI', None, None]},
+                               'LPS': {'[M-H]-': [neg_gen, neg_gen2, 'LPS', None, None]},
+                               'Cer': {'[M+H]+': [cer_base_spec, cer_fa_spec, 'LCB', cer_base_spec2, 'M']}}
         # Note: add also the length of the list that it should have (georgia: 18.2.2019)
         # Note: in the below section we can add also the info about the link. (georgia: 18.2.2019)
+        # Note: The true or false statement (last entry of the list indicate if we have O- or P- FA
+        # Note: Entry at the position 3 in the list will be used as a control if should short the FA or not
+        # Note (continue): 0 - indicates to do not mergesort them
         self.lipid_fa_dct = {'PA': ['PL', ['FA1', 'FA2'], None, None, 2, False],
                              'PC': ['PL', ['FA1', 'FA2'], None, None, 2, True],
                              'PE': ['PL', ['FA1', 'FA2'], None, None, 2, True],
@@ -173,14 +210,14 @@ class NameParserFA:
                              'PS': ['PL', ['FA1', 'FA2'], None, None, 2, False],
                              'TG': ['TG', ['FA1', 'FA2', 'FA3'], None, None, 3, True],
                              'DG': ['DG', ['FA1', 'FA2'], None, None, 2, True],
-                             'LPA': ['LPL', ['FA1'], None, None, 1, False],
-                             'LPC': ['LPL', ['FA1'], None, None, 1, True],
-                             'LPE': ['LPL', ['FA1'], None, None, 1, True],
-                             'LPG': ['LPL', ['FA1'], None, None, 1, False],
-                             'LPI': ['LPL', ['FA1'], None, None, 1, False],
-                             'LPS': ['LPL', ['FA1'], None, None, 1, False],
+                             'LPA': ['LPL', ['FA1'], 0, None, 1, False],
+                             'LPC': ['LPL', ['FA1'], 0, None, 1, True],
+                             'LPE': ['LPL', ['FA1'], 0, None, 1, True],
+                             'LPG': ['LPL', ['FA1'], 0, None, 1, False],
+                             'LPI': ['LPL', ['FA1'], 0, None, 1, False],
+                             'LPS': ['LPL', ['FA1'], 0, None, 1, False],
                              'CL': ['CL', ['FA1', 'FA2', 'FA3', 'FA4'], None, None, 4, False],
-                             'Cer': ['CER', ['FA1'], None, None, 2, False]} # alternative need to decide which of the two wil be kept
+                             'Cer': ['CER', ['FA1', 'FA2'], 0, None, 2, False]} # alternative need to decide which of the two wil be kept
                              # 'Cer': ['CER', ['FA1'], 'Base', ['M', 'D', 'T'], 2, False]}
         self.lipid_link_dct = {'PA': False}
 
@@ -328,17 +365,19 @@ class NameParserFA:
         fa_info['EXACTMASS'] = exactmass
         low_v = ''
         high_v = ''
-        if fa_info['LINK'] in ['d', 'm', 't']:
-            print ('welll')
-            fragment_list = self.lipid_mode_dct[lclass][mode][0]
-
-            for frag in fragment_list:
-                fa_info['{f}_MZ'.format(f=frag)]= round(exactmass + self.loss_dct[frag], 6)
-                fa_info['{f}_ABBR'.format(f=frag)] = frag.replace('LCB', 'LCB({l})'.format(l=fa_info['ABBR']))
-                low_v = round(ppm_window_para(fa_info['{f}_MZ'.format(f=frag)], ms2_ppm * -1), 6)
-                high_v = round(ppm_window_para(fa_info['{f}_MZ'.format(f=frag)], ms2_ppm), 6)
-                fa_info['{f}_Q'.format(f=frag)] = (low_v.astype(str) + ' <= mz <= ' + high_v.astype(str))
-        elif fa_info['LINK'] == 'SPB':
+        # Delete: the below section. Not necessary any more
+        # if fa_info['LINK'] in ['d', 'm', 't']:
+        #     print ('welll')
+        #     fragment_list = self.lipid_mode_dct[lclass][mode][0]
+        #
+        #     for frag in fragment_list:
+        #         fa_info['{f}_MZ'.format(f=frag)]= round(exactmass + self.loss_dct[frag], 6)
+        #         fa_info['{f}_ABBR'.format(f=frag)] = frag.replace('LCB', 'LCB({l})'.format(l=fa_info['ABBR']))
+        #         low_v = round(ppm_window_para(fa_info['{f}_MZ'.format(f=frag)], ms2_ppm * -1), 6)
+        #         high_v = round(ppm_window_para(fa_info['{f}_MZ'.format(f=frag)], ms2_ppm), 6)
+        #         fa_info['{f}_Q'.format(f=frag)] = (low_v.astype(str) + ' <= mz <= ' + high_v.astype(str))
+        # el
+        if fa_info['LINK'] == 'SPB':
             print ('welll')
             fragment_list = self.lipid_mode_dct[lclass][mode][0]
             if fa_info['O'] == 1:
@@ -403,9 +442,9 @@ if __name__ == '__main__':
 
 
     abbr_decoder = NameParserFA()
-    lipidC = 'Cer'
-    ionM = '[M+H]+'
-    abbr_lst = ['SPB18:1;1', 'SPB18:1;2',  'SPB18:1;3', 'FA16:0', 'FA18:0']
+    lipidC = 'LPC'
+    ionM = '[M+HCOO]-'
+    abbr_lst = ['FA18:1', 'FA18:2',  'FA18:3', 'FA16:0', 'FA18:0']
     for abbr in abbr_lst:
         x = abbr_decoder.get_fa_info_geo(abbr, lipidC, ionM)
         print(x)
