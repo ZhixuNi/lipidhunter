@@ -288,49 +288,6 @@ def huntlipids(param_dct: dict, error_lst: list,
                                   & (lipid_info_df['{ch}_MZ'.format(ch=usr_charge)] <= mz_end)]
     print(lipid_info_df.iloc[0])
 
-
-    # Delet: replace with the above
-    # Comment: All the below check was unecessary
-    # print (lipid_info_df.iloc[0])
-    # pos_charge_lst = ['[M+H]+', '[M+Na]+', '[M+NH4]+']
-    # neg_charge_lst = ['[M-H]-', '[M+HCOO]-', '[M+CH3COO]-']
-
-    # if usr_charge in neg_charge_lst:
-    #     if usr_lipid_class in ['PC', 'LPC']:
-    #         if usr_charge == '[M+HCOO]-':
-    #             lipid_info_df = lipid_info_df[(mz_start <= lipid_info_df['[M+HCOO]-_MZ'])
-    #                                           & (lipid_info_df['[M+HCOO]-_MZ'] <= mz_end)]
-    #         elif usr_charge == '[M+CH3COO]-':
-    #             lipid_info_df = lipid_info_df[(mz_start <= lipid_info_df['[M+CH3COO]-_MZ'])
-    #                                           & (lipid_info_df['[M+CH3COO]-_MZ'] <= mz_end)]
-    #         else:
-    #             error_lst.append('PC charge not supported.  User input charge = %s. '
-    #                              'LipidHunter support [M+HCOO]- and [M+CH3COO]-.' % usr_charge)
-    #     else:
-    #         lipid_info_df = lipid_info_df[
-    #             (mz_start <= lipid_info_df['[M-H]-_MZ']) & (lipid_info_df['[M-H]-_MZ'] <= mz_end)]
-    # elif usr_charge in pos_charge_lst:
-    #     if usr_lipid_class == 'TG':
-    #         if usr_charge == '[M+NH4]+':
-    #             lipid_info_df = lipid_info_df[
-    #                 (mz_start <= lipid_info_df['[M+NH4]+_MZ']) & (lipid_info_df['[M+NH4]+_MZ'] <= mz_end)]
-    #         elif usr_charge == '[M+H]+':
-    #             lipid_info_df = lipid_info_df[
-    #                 (mz_start <= lipid_info_df['[M+H]+_MZ']) & (lipid_info_df['[M+H]+_MZ'] <= mz_end)]
-    #         elif usr_charge == '[M+Na]+':
-    #             lipid_info_df = lipid_info_df[
-    #                 (mz_start <= lipid_info_df['[M+Na]+_MZ']) & (lipid_info_df['[M+Na]+_MZ'] <= mz_end)]
-    #     if usr_lipid_class == 'DG':
-    #         if usr_charge == '[M+NH4]+':
-    #             lipid_info_df = lipid_info_df[
-    #                 (mz_start <= lipid_info_df['[M+NH4]+_MZ']) & (lipid_info_df['[M+NH4]+_MZ'] <= mz_end)]
-    #         elif usr_charge == '[M+H]+':
-    #             lipid_info_df = lipid_info_df[
-    #                 (mz_start <= lipid_info_df['[M+H]+_MZ']) & (lipid_info_df['[M+H]+_MZ'] <= mz_end)]
-    # else:
-    #     error_lst.append('Lipid class or charge NOT supported.  User input lipid class = %s, charge = %s. '
-    #                      % (usr_lipid_class, usr_charge))
-
     # TODO(zhixu.ni@uni-leipzig.de): Add more error to the error_lst.
 
     pr_hunter = PrecursorHunter(lipid_info_df, param_dct, os_type=os_typ)
@@ -775,6 +732,7 @@ def huntlipids(param_dct: dict, error_lst: list,
         usr_lipid_class_q = usr_lipid_class
     usr_key_frag_df = pd.read_excel(key_frag_cfg)
     usr_key_frag_df = usr_key_frag_df.query('EXACTMASS > 0')
+    # TODO: will change the below part (georgia.angelidou@uni-leipzig.de)
     # get the information from the following columns
     usr_key_frag_df = usr_key_frag_df[['CLASS', 'TYPE', 'EXACTMASS', 'PR_CHARGE', 'LABEL', 'CHARGE_MODE']]
     # find key peaks for the target PL class
@@ -796,91 +754,6 @@ def huntlipids(param_dct: dict, error_lst: list,
     key_frag_dct = {'target_frag_df': target_frag_df, 'target_nl_df': target_nl_df,
                     'other_frag_df': other_frag_df, 'other_nl_df': other_nl_df}
 
-
-    # pl_class_lst = ['PA', 'PC', 'PE', 'PG', 'PI', 'PS', 'PIP']
-    # lpl_class_lst = ['LPA', 'LPC', 'LPE', 'LPG', 'LPI', 'LPS', 'LPIP']
-    # pl_neg_chg_lst = ['[M-H]-', '[M+HCOO]-', '[M+CH3COO]-']
-    # tg_class_lst = ['TG', 'DG']
-    # tg_pos_chg_lst = ['[M+NH4]+', '[M+H]+', '[M+Na]+']
-    # # Change: will be combine in one. Doesn't need to have if statement (georgia:14.2.2019)
-    # # Todo(zhixu.ni@uni-leipzig.de): Other classes such as SM, Cer and CL here.
-    # Delet: will be deleted
-    #
-    # if usr_lipid_class in pl_class_lst and usr_charge in pl_neg_chg_lst:
-    #     charge_mode = 'NEG'
-    #     usr_key_frag_df = pd.read_excel(key_frag_cfg)
-    #     usr_key_frag_df = usr_key_frag_df.query('EXACTMASS > 0')
-    #     # get the information from the following columns
-    #     usr_key_frag_df = usr_key_frag_df[['CLASS', 'TYPE', 'EXACTMASS', 'PR_CHARGE', 'LABEL', 'CHARGE_MODE']]
-    #     # find key peaks for the target PL class
-    #     target_frag_df = usr_key_frag_df.query(r'CLASS == "%s" and TYPE == "FRAG" and PR_CHARGE == "%s"'
-    #                                            % (usr_lipid_class, usr_charge))
-    #     target_nl_df = usr_key_frag_df.query(r'CLASS == "%s" and TYPE == "NL" and PR_CHARGE == "%s"'
-    #                                          % (usr_lipid_class, usr_charge))
-    #     # add precursor to the list
-    #     target_pr_df = pd.DataFrame(data={'CLASS': usr_lipid_class, 'TYPE': 'NL', 'EXACTMASS': 0.0,
-    #                                       'PR_CHARGE': usr_charge, 'LABEL': 'PR', 'CHARGE_MODE': 'NEG'}, index=['PR'])
-    #     target_nl_df = target_nl_df.append(target_pr_df)
-    #     target_nl_df.reset_index(drop=True, inplace=True)
-    #
-    #     # extract info for other classes
-    #     other_frag_df = usr_key_frag_df.query('CLASS != "%s" and TYPE == "FRAG" and CHARGE_MODE == "%s"'
-    #                                           % (usr_lipid_class, charge_mode))
-    #     other_nl_df = usr_key_frag_df.query('CLASS != "%s" and TYPE == "NL" and CHARGE_MODE == "%s"'
-    #                                         % (usr_lipid_class, charge_mode))
-    #     key_frag_dct = {'target_frag_df': target_frag_df, 'target_nl_df': target_nl_df,
-    #                     'other_frag_df': other_frag_df, 'other_nl_df': other_nl_df}
-    # elif usr_lipid_class in lpl_class_lst and usr_charge in pl_neg_chg_lst:
-    #     charge_mode = 'NEG'
-    #     usr_key_frag_df = pd.read_excel(key_frag_cfg)
-    #     usr_key_frag_df = usr_key_frag_df.query('EXACTMASS > 0')
-    #     # get the information from the following columns
-    #     usr_key_frag_df = usr_key_frag_df[['CLASS', 'TYPE', 'EXACTMASS', 'PR_CHARGE', 'LABEL', 'CHARGE_MODE']]
-    #     # find key peaks for the target PL class
-    #     target_frag_df = usr_key_frag_df.query(r'CLASS == "%s" and TYPE == "FRAG" and PR_CHARGE == "%s"'
-    #                                            % (usr_lipid_class[1:], usr_charge))
-    #     target_nl_df = usr_key_frag_df.query(r'CLASS == "%s" and TYPE == "NL" and PR_CHARGE == "%s"'
-    #                                          % (usr_lipid_class[1:], usr_charge))
-    #     # add precursor to the list
-    #     target_pr_df = pd.DataFrame(data={'CLASS': usr_lipid_class, 'TYPE': 'NL', 'EXACTMASS': 0.0,
-    #                                       'PR_CHARGE': usr_charge, 'LABEL': 'PR', 'CHARGE_MODE': 'NEG'}, index=['PR'])
-    #     target_nl_df = target_nl_df.append(target_pr_df)
-    #     target_nl_df.reset_index(drop=True, inplace=True)
-    #
-    #     # extract info for other classes
-    #     other_frag_df = usr_key_frag_df.query('CLASS != "%s" and TYPE == "FRAG" and CHARGE_MODE == "%s"'
-    #                                           % (usr_lipid_class[1:], charge_mode))
-    #     other_nl_df = usr_key_frag_df.query('CLASS != "%s" and TYPE == "NL" and CHARGE_MODE == "%s"'
-    #                                         % (usr_lipid_class[1:], charge_mode))
-    #     key_frag_dct = {'target_frag_df': target_frag_df, 'target_nl_df': target_nl_df,
-    #                     'other_frag_df': other_frag_df, 'other_nl_df': other_nl_df}
-    # elif usr_lipid_class in tg_class_lst and usr_charge in tg_pos_chg_lst:
-    #     charge_mode = 'POS'
-    #     usr_key_frag_df = pd.read_excel(key_frag_cfg)
-    #     usr_key_frag_df = usr_key_frag_df.query('EXACTMASS > 0')
-    #     # get the information from the following columns
-    #     usr_key_frag_df = usr_key_frag_df[['CLASS', 'TYPE', 'EXACTMASS', 'PR_CHARGE', 'LABEL', 'CHARGE_MODE']]
-    #     # find key peaks for the target PL class
-    #     target_frag_df = usr_key_frag_df.query(r'CLASS == "%s" and TYPE == "FRAG" and PR_CHARGE == "%s"'
-    #                                            % (usr_lipid_class, usr_charge))
-    #     target_nl_df = usr_key_frag_df.query(r'CLASS == "%s" and TYPE == "NL" and PR_CHARGE == "%s"'
-    #                                          % (usr_lipid_class, usr_charge))
-    #     # add precursor to the list
-    #     target_pr_df = pd.DataFrame(data={'CLASS': usr_lipid_class, 'TYPE': 'NL', 'EXACTMASS': 0.0,
-    #                                       'PR_CHARGE': usr_charge, 'LABEL': 'PR', 'CHARGE_MODE': 'NEG'}, index=['PR'])
-    #     target_nl_df = target_nl_df.append(target_pr_df)
-    #     target_nl_df.reset_index(drop=True, inplace=True)
-    #
-    #     # extract info for other classes
-    #     other_frag_df = usr_key_frag_df.query('CLASS != "%s" and TYPE == "FRAG" and CHARGE_MODE == "%s"'
-    #                                           % (usr_lipid_class, charge_mode))
-    #     other_nl_df = usr_key_frag_df.query('CLASS != "%s" and TYPE == "NL" and CHARGE_MODE == "%s"'
-    #                                         % (usr_lipid_class, charge_mode))
-    #     key_frag_dct = {'target_frag_df': target_frag_df, 'target_nl_df': target_nl_df,
-    #                     'other_frag_df': other_frag_df, 'other_nl_df': other_nl_df}
-    #
-    # else:
-    #     key_frag_dct = {}
 
     print('[INFO] --> Key FRAG Dict Generated ...')
 
@@ -1139,53 +1012,7 @@ def huntlipids(param_dct: dict, error_lst: list,
 
         output_df.drop_duplicates(keep='first', inplace=True)
         output_header_lst = output_df.columns.values.tolist()
-        # TODO (georgia.angeldou@uni-leipzig.de): Add the info for the DG
-        # output_list and output_round_dct for at the beggining with the usr_weight file
 
-        # if usr_lipid_class in ['PA', 'PC', 'PE', 'PG', 'PI', 'PIP', 'PS']:
-        #     output_list = ['FA1_[FA-H]-_i', 'FA2_[FA-H]-_i', '[LPL(FA1)-H]-_i', '[LPL(FA2)-H]-_i',
-        #                    '[LPL(FA1)-H2O-H]-_i', '[LPL(FA2)-H2O-H]-_i']
-        #     output_round_dct = {r'MS1_obs_mz': 4, r'Lib_mz': 4, 'ppm': 2, 'MS2_scan_time': 3,
-        #                         'i_fa1': 2, 'i_fa2': 2, 'i_[M-H]-fa1': 2, 'i_[M-H]-fa2': 2,
-        #                         'i_[M-H]-fa1-H2O': 2, 'i_[M-H]-fa2-H2O': 2
-        #                         }
-        #
-        # elif usr_lipid_class in ['LPA', 'LPC', 'LPE', 'LPG', 'LPI', 'LPIP', 'LPS']:
-        #     output_list = ['FA1_[FA-H]-_i']
-        #     output_round_dct = {r'MS1_obs_mz': 4, r'Lib_mz': 4, 'ppm': 2, 'MS2_scan_time': 3,
-        #                         'i_fa1': 2, 'i_fa2': 2, 'i_[M-H]-fa1': 2, 'i_[M-H]-fa2': 2,
-        #                         'i_[M-H]-fa1-H2O': 2, 'i_[M-H]-fa2-H2O': 2
-        #                         }
-        #
-        # elif usr_lipid_class in ['TG'] and usr_charge in ['[M+NH4]+', '[M+H]+']:
-        #     output_list = ['FA1_[FA-H2O+H]+_i', 'FA2_[FA-H2O+H]+_i', 'FA3_[FA-H2O+H]+_i', '[MG(FA1)-H2O+H]+_i',
-        #                    '[MG(FA2)-H2O+H]+_i', '[MG(FA3)-H2O+H]+_i', '[M-(FA1)+H]+_i', '[M-(FA2)+H]+_i',
-        #                    '[M-(FA3)+H]+_i']
-        #     output_round_dct = {r'MS1_obs_mz': 4, r'Lib_mz': 4, 'ppm': 2, 'MS2_scan_time': 3,
-        #                         'i_fa1': 2, 'i_fa2': 2, 'i_fa3': 2, 'i_[M+H]-fa1': 2, 'i_[M+H]-fa2': 2,
-        #                         'i_[M+H]-fa3': 2, 'i_[MG(fa1)+H]-H2O': 2, 'i_[MG(fa2)+H]-H2O': 2,
-        #                         'i_[MG(fa3)+H]-H2O': 2}
-        # elif usr_lipid_class in ['TG'] and usr_charge in ['[M+Na]+']:
-        #     # TODO (georgia.angelidou@uni-leipzig.de): check why this can cause some problems with [MGSN1-H2O+H]+
-        #     output_list = ['FA1_[FA-H2O+H]+_i', 'FA2_[FA-H2O+H]+_i', 'FA3_[FA-H2O+H]+_i', '[MG(FA1)-H2O+H]+_i',
-        #                    '[MG(FA2)-H2O+H]+_i', '[MG(FA3)-H2O+H]+_i', '[M-(FA1)+Na]+_i', '[M-(FA2)+Na]+_i',
-        #                    '[M-(FA3)+Na]+_i', '[M-(FA1-H+Na)+N]+_i', '[M-(FA2-H+Na)+H]+_i']
-        #     output_round_dct = {r'MS1_obs_mz': 4, r'lib_mz': 4, 'ppm': 2, 'MS2_scan_time': 3, 'i_fa1': 2, 'i_fa2': 2,
-        #                         'i_fa3': 2, 'i_[M+Na]-fa1': 2, 'i_[M+Na]-fa2': 2, 'i_[M+Na]-fa3': 2,
-        #                         'i_[M+H]-fa1-H+Na': 2, 'i_[M+H]-fa2-H+Na': 2, 'i_[M+H]-fa3-H+Na': 2}
-        # elif usr_lipid_class in ['DG'] and usr_charge in ['[M+H]+', '[M+NH4]+', '[M+Na]+']:
-        #     output_list = ['FA1_[FA-H2O+H]+_i', 'FA2_[FA-H2O+H]+_i', '[MG(FA1)-H2O+H]+_i',
-        #                    '[MG(FA2)-H2O+H]+_i']
-        #     output_round_dct = {r'MS1_obs_mz': 4, r'Lib_mz': 4, 'ppm': 2, 'MS2_scan_time': 3, 'i_fa1': 2, 'i_fa2': 2,
-        #                         'i_[MG(fa1)+H]-H2O': 2, 'i_[MG(fa2)+H]-H2O': 2}
-        #
-        # else:
-        #     output_list = ['FA1_[FA-H]-_i', 'FA2_[FA-H]-_i', '[LPL(FA1)-H]-_i', '[LPL(FA2)-H]-_i',
-        #                    '[LPL(FA1)-H2O-H]-_i', '[LPL(FA2)-H2O-H]-_i']
-        #     output_round_dct = {r'MS1_obs_mz': 4, r'Lib_mz': 4, 'ppm': 2, 'MS2_scan_time': 3,
-        #                         'i_fa1': 2, 'i_fa2': 2, 'i_[M-H]-fa1': 2, 'i_[M-H]-fa2': 2,
-        #                         'i_[M-H]-fa1-H2O': 2, 'i_[M-H]-fa2-H2O': 2
-        #                         }
         for _i_check in output_list:
             if _i_check not in output_header_lst:
                 output_df[_i_check] = 0.0
@@ -1198,54 +1025,6 @@ def huntlipids(param_dct: dict, error_lst: list,
 
         output_df.rename(columns={'OBS_RESIDUES': '#Observed_FA'},
                          inplace=True)
-        # if usr_lipid_class in ['PA', 'PC', 'PE', 'PG', 'PI', 'PIP', 'PS']:
-        #     output_short_lst = ['Proposed_structures', 'DISCRETE_ABBR', 'Formula_neutral', 'Formula_ion', 'Charge',
-        #                         'Lib_mz', 'ppm', 'ISOTOPE_SCORE', 'RANK_SCORE',
-        #                         'MS1_obs_mz', 'MS1_obs_i', r'MS2_PR_mz', 'MS2_scan_time',
-        #                         'DDA#', 'Scan#', '#Observed_FA', '#Specific_peaks', '#Unspecific_peaks',
-        #                         'FA1_[FA-H]-_i', 'FA2_[FA-H]-_i',
-        #                         '[LPL(FA1)-H]-_i', '[LPL(FA2)-H]-_i',
-        #                         '[LPL(FA1)-H2O-H]-_i', '[LPL(FA2)-H2O-H]-_i'
-        #                         ]
-        # elif usr_lipid_class in ['LPA', 'LPC', 'LPE', 'LPG', 'LPI', 'LPIP', 'LPS']:
-        #     output_short_lst = ['Proposed_structures', 'DISCRETE_ABBR', 'Formula_neutral', 'Formula_ion', 'Charge',
-        #                         'Lib_mz', 'ppm', 'ISOTOPE_SCORE', 'RANK_SCORE',
-        #                         'MS1_obs_mz', 'MS1_obs_i', r'MS2_PR_mz', 'MS2_scan_time',
-        #                         'DDA#', 'Scan#', '#Observed_FA', '#Specific_peaks', '#Unspecific_peaks',
-        #                         'FA1_[FA-H]-_i',
-        #                         ]
-        # elif usr_lipid_class in ['TG'] and usr_charge in ['[M+H]+', '[M+NH4]+']:
-        #     output_short_lst = ['Proposed_structures', 'DISCRETE_ABBR', 'Formula_neutral', 'Formula_ion', 'Charge',
-        #                         'Lib_mz', 'ppm', 'ISOTOPE_SCORE', 'RANK_SCORE',
-        #                         'MS1_obs_mz', 'MS1_obs_i', r'MS2_PR_mz', 'MS2_scan_time',
-        #                         'DDA#', 'Scan#', '#Observed_FA',
-        #                         '[M-(FA1)+H]+_i', '[M-(FA2)+H]+_i', '[M-(FA3)+H]+_i',
-        #                         '[MG(FA1)-H2O+H]+_i', '[MG(FA2)-H2O+H]+_i', '[MG(FA3)-H2O+H]+_i',
-        #                         'FA1_[FA-H2O+H]+_i', 'FA2_[FA-H2O+H]+_i', 'FA3_[FA-H2O+H]+_i',
-        #                         ]
-        # elif usr_lipid_class in ['TG'] and usr_charge in ['[M+Na]+']:
-        #     output_short_lst = ['Proposed_structures', 'DISCRETE_ABBR', 'Formula_neutral', 'Formula_ion', 'Charge',
-        #                         'Lib_mz', 'ppm', 'ISOTOPE_SCORE', 'RANK_SCORE',
-        #                         'MS1_obs_mz', 'MS1_obs_i', r'MS2_PR_mz', 'MS2_scan_time',
-        #                         'DDA#', 'Scan#', '#Observed_FA',
-        #                         '[M-(FA1)+Na]+_i', '[M-(FA2)+Na]+_i', '[M-(FA3)+Na]+_i',
-        #                         '[MG(FA1)-H2O+H]+_i', '[MG(FA2)-H2O+H]+_i', '[MG(FA3)-H2O+H]+_i',
-        #                         'FA1_[FA-H2O+H]+_i', 'FA2_[FA-H2O+H]+_i', 'FA3_[FA-H2O+H]+_i'
-        #                         ]
-        # elif usr_lipid_class in ['DG'] and usr_charge in ['[M+H]+', '[M+NH4]+', '[M+Na]+']:
-        #     output_short_lst = ['Proposed_structures', 'DISCRETE_ABBR', 'Formula_neutral', 'Formula_ion', 'Charge',
-        #                         'Lib_mz', 'ppm', 'ISOTOPE_SCORE', 'RANK_SCORE',
-        #                         'MS1_obs_mz', 'MS1_obs_i', r'MS2_PR_mz', 'MS2_scan_time',
-        #                         'DDA#', 'Scan#', '#Observed_FA',
-        #                         '[MG(FA1)-H2O+H]+_i', '[MG(FA2)-H2O+H]+_i',
-        #                         'FA1_[FA-H2O+H]+_i', 'FA2_[FA-H2O+H]+_i',
-        #                         ]
-        # else:
-        #     output_short_lst = ['Proposed_structures', 'DISCRETE_ABBR', 'Formula_neutral', 'Formula_ion', 'Charge',
-        #                         'Lib_mz', 'ppm', 'ISOTOPE_SCORE', 'RANK_SCORE',
-        #                         'MS1_obs_mz', 'MS1_obs_i', r'MS2_PR_mz', 'MS2_scan_time',
-        #                         'DDA#', 'Scan#', '#Observed_FA',
-        #                         ]
 
         # Make copy of selected list of columns from output_df to avoid pandas warnings
         final_output_df = output_df[output_short_lst]
@@ -1274,7 +1053,7 @@ def huntlipids(param_dct: dict, error_lst: list,
 
     # Start multiprocessing to save img for HTML report
     if save_fig is True:
-        gen_html_report(param_dct, output_df, lipid_info_img_lst)
+        gen_html_report(param_dct, output_df, lipid_info_img_lst, index_l = index_lst)
     else:
         print('[WARNING] !!! User skip image generation !!!!!!')
     print('Time', time.clock(), start_time)
@@ -1307,17 +1086,17 @@ if __name__ == '__main__':
 
     if os.path.isfile(hunter_file_path):
         print('\nLipidHunter folder', hunter_folder, '\n')
-        test_key = "PC_[M+HCOO]-"
+        test_key = "PE_[M-H]-"
 
         t_str = time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime())
-        lipid_class = "PC"
+        lipid_class = "PE"
 
         test_dct = {
             'fawhitelist_path_str': r'../ConfigurationFiles//1-FA_Whitelist_cER_v2.xlsx',
             # 'mzml_path_str': r'../Test/mzML/TG_Pos_Thermo_Orbi.mzML',
             'mzml_path_str': r'../Test/mzML/VIS2Cer.mzML',
             # 'mzml_path_str': r'../Test/mzML/PL_Neg_Waters_qTOF.mzML',
-            #'mzml_path_str': r"D:\Georgia\PhD\2018\Samples\Mike\AdipoAtlas\PolarPos\QE_18_45_0,05p_VIS2_20181110102309.mzML",
+            # 'mzml_path_str': r"D:\Georgia\PhD\2018\Samples\Mike\AdipoAtlas\PolarPos\QE_18_45_0,05p_VIS2_20181110102309.mzML",
             'img_output_folder_str': r'../Test/results/%s_%s' % (test_key, t_str),
             'xlsx_output_path_str': r'../Test/results/%s_%s.xlsx' % (test_key, t_str),
             'lipid_specific_cfg': r'../ConfigurationFiles/3-Specific_ions.xlsx',

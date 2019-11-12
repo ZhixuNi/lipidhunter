@@ -214,7 +214,7 @@ class LogPageCreator(object):
         except IOError:
             pass
 
-    def add_all_info(self, ident_info_df):
+    def add_all_info(self, ident_info_df, indx_l):
 
         with open(self.image_lst_page, 'a') as img_page:
             with open(self.idx_lst_page, 'a') as idx_page:
@@ -251,68 +251,16 @@ class LogPageCreator(object):
                     charge = _subgroup_df['Charge'].values.tolist()[0]
 
                     # convert info df to html table code
-                    plot_df_cols = []
-                    if self.lipid_class in ['PA', 'PC', 'PE', 'PG', 'PI', 'PIP', 'PS']:
-                        plot_df_cols = ['Proposed_structures', 'DISCRETE_ABBR', 'RANK_SCORE',
-                                        'FA1_[FA-H]-_i_per', 'FA2_[FA-H]-_i_per',
-                                        '[LPL(FA1)-H]-_i_per', '[LPL(FA2)-H]-_i_per',
-                                        '[LPL(FA1)-H2O-H]-_i_per', '[LPL(FA2)-H2O-H]-_i_per']
-                        peak_info_df = pd.DataFrame(_subgroup_df, columns=plot_df_cols)
-                        peak_info_df.rename(
-                            columns={'FA1_[FA-H]-_i_per': 'FA1_[FA-H]-_i (%)', 'FA2_[FA-H]-_i_per': 'FA2_[FA-H]-_i (%)',
-                                     '[LPL(FA1)-H]-_i_per': '[LPL(FA1)-H]-_i (%)',
-                                     '[LPL(FA2)-H]-_i_per': '[LPL(FA2)-H]-_i (%)',
-                                     '[LPL(FA1)-H2O-H]-_i_per': '[LPL(FA1)-H2O-H]-_i (%)',
-                                     '[LPL(FA2)-H2O-H]-_i_per': '[LPL(FA2)-H2O-H]-_i (%)'}, inplace=True)
-                    elif self.lipid_class in ['TG', 'TAG', 'MG', 'MAG'] and charge in ['[M+H]+', '[M+NH4]+']:
-                        plot_df_cols = ['Proposed_structures', 'DISCRETE_ABBR', 'RANK_SCORE', 'FA1_[FA-H2O+H]+_i_per',
-                                        'FA2_[FA-H2O+H]+_i_per', 'FA3_[FA-H2O+H]+_i_per', '[M-(FA1)+H]+_i_per',
-                                        '[M-(FA2)+H]+_i_per', '[M-(FA3)+H]+_i_per', '[MG(FA1)-H2O+H]+_i_per',
-                                        '[MG(FA2)-H2O+H]+_i_per', '[MG(FA3)-H2O+H]+_i_per']
-                        peak_info_df = pd.DataFrame(_subgroup_df, columns=plot_df_cols)
-                        peak_info_df.rename(
-                            columns={'FA1_[FA-H2O+H]+_i_per': 'FA1_[FA-H2O+H]+_i (%)',
-                                     'FA2_[FA-H2O+H]+_i_per': 'FA2_[FA-H2O+H]+_i (%)',
-                                     'FA3_[FA-H2O+H]+_i_per': 'FA3_[FA-H2O+H]+_i (%)',
-                                     '[M-(FA1)+H]+_i_per': '[M-(FA1)+H]+_i (%)',
-                                     '[M-(FA2)+H]+_i_per': '[M-(FA2)+H]+_i (%)',
-                                     '[M-(FA3)+H]+_i_per': '[M-(FA3)+H]+_i (%)',
-                                     '[MG(FA1)-H2O+H]+_i_per': '[MG(FA1)-H2O+H]+_i (%)',
-                                     '[MG(FA2)-H2O+H]+_i_per': '[MG(FA2)-H2O+H]+_i (%)',
-                                     '[MG(FA3)-H2O+H]+_i_per': '[MG(FA3)-H2O+H]+_i (%)'}, inplace=True)
-                    elif self.lipid_class in ['TG'] and charge in ['[M+Na]+']:
-                        plot_df_cols = ['Proposed_structures', 'DISCRETE_ABBR', 'RANK_SCORE', 'FA1_[FA-H2O+H]+_i_per',
-                                        'FA2_[FA-H2O+H]+_i_per', 'FA3_[FA-H2O+H]+_i_per', '[M-(FA1)+Na]+_i_per',
-                                        '[M-(FA2)+Na]+_i_per', '[M-(FA3)+Na]+_i_per', '[MG(FA1)-H2O+H]+_i_per',
-                                        '[MG(FA2)-H2O+H]+_i_per', '[MG(FA3)-H2O+H]+_i_per']
-                        peak_info_df = pd.DataFrame(_subgroup_df, columns=plot_df_cols)
-                        peak_info_df.rename(
-                            columns={'FA1_[FA-H2O+H]+_i_per': 'FA1_[FA-H2O+H]+_i (%)',
-                                     'FA2_[FA-H2O+H]+_i_per': 'FA2_[FA-H2O+H]+_i (%)',
-                                     'FA3_[FA-H2O+H]+_i_per': 'FA3_[FA-H2O+H]+_i (%)',
-                                     '[M-(FA1)+Na]+_i_per': '[M-(FA1)+Na]+_i (%)',
-                                     '[M-(FA2)+Na]+_i_per': '[M-(FA2)+Na]+_i (%)',
-                                     '[M-(FA3)+Na]+_i_per': '[M-(FA3)+Na]+_i (%)',
-                                     '[MG(FA1)-H2O+H]+_i_per': '[MG(FA1)-H2O+H]+_i (%)',
-                                     '[MG(FA2)-H2O+H]+_i_per': '[MG(FA2)-H2O+H]+_i (%)',
-                                     '[MG(FA3)-H2O+H]+_i_per': '[MG(FA3)-H2O+H]+_i (%)'}, inplace=True)
-                    elif self.lipid_class in ['DG'] and charge in ['[M+H]+', '[M+NH4]+']:
-                        plot_df_cols = ['Proposed_structures', 'DISCRETE_ABBR', 'RANK_SCORE', 'FA1_[FA-H2O+H]+_i_per',
-                                        'FA2_[FA-H2O+H]+_i_per', '[MG(FA1)-H2O+H]+_i_per', '[MG(FA2)-H2O+H]+_i_per']
-                        peak_info_df = pd.DataFrame(_subgroup_df, columns=plot_df_cols)
-                        peak_info_df.rename(
-                            columns={'FA1_[FA-H2O+H]+_i_per': 'FA1_[FA-H2O+H]+_i (%)',
-                                     'FA2_[FA-H2O+H]+_i_per': 'FA2_[FA-H2O+H]+_i (%)',
-                                     '[M-(FA1)+H]+_i_per': '[M-(FA1)+H]+_i (%)',
-                                     '[M-(FA2)+H]+_i_per': '[M-(FA2)+H]+_i (%)',
-                                     '[MG(FA1)-H2O+H]+_i_per': '[MG(FA1)-H2O+H]+_i (%)',
-                                     '[MG(FA2)-H2O+H]+_i_per': '[MG(FA2)-H2O+H]+_i (%)'}, inplace=True)
-                    else:
-                        plot_df_cols = ['Proposed_structures', 'DISCRETE_ABBR', 'RANK_SCORE',
-                                        'FA1_[FA-H]-i_per', 'FA2_[FA-H]-i_per',
-                                        '[LPL(FA1)-H]-i_per', '[LPL(FA2)-H]-i_per',
-                                        '[LPL(FA1)-H2O-H]-i_per', '[LPL(FA2)-H2O-H]-i_per']
-                        peak_info_df = pd.DataFrame(_subgroup_df, columns=plot_df_cols)
+                    plot_df_cols = ['Proposed_structures', 'DISCRETE_ABBR', 'RANK_SCORE']
+                    columns_c={}
+                    for _i in indx_l:
+                        _i_i = '{f}_i_per'.format(f=_i)
+                        _i_per = '{f}_i (%)'.format(f=_i)
+                        plot_df_cols.append(_i_i)
+                        columns_c[_i_i] = _i_per
+
+                    peak_info_df = pd.DataFrame(_subgroup_df, columns=plot_df_cols)
+                    peak_info_df.rename(columns=columns_c, inplace=True)
 
                     try:
                         table_buf_code = peak_info_df.to_html(float_format='%.1f', border=0, index=False)

@@ -26,6 +26,7 @@ matplotlib.use('agg')
 #     rcParams['font.family'] = 'ubuntu'
 from matplotlib import pyplot as plt
 import matplotlib.patches as patches
+from LibLipidHunter.LipidNomenclature import NameParserFA
 
 # import matplotlib as mpl
 # from matplotlib.offsetbox import AnnotationBbox, OffsetImage
@@ -34,7 +35,7 @@ import matplotlib.patches as patches
 from concurrent.futures import ThreadPoolExecutor
 
 
-def plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_score_info_dct, specific_dct,
+def plot_spectra(l_c, abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_score_info_dct, specific_dct,
                  formula_charged, charge, core_count, save_img_as=None, img_type='png', dpi=300, vendor='waters',
                  ms1_precision=50e-6):
     ms2_pr_mz = mz_se['MS2_PR_mz']
@@ -47,28 +48,26 @@ def plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_sco
     obs_info_df = ident_info_dct['INFO']
     obs_ident_df = ident_info_dct['IDENT']
 
-    obs_fa_df = ident_info_dct['OBS_FA']
-    if not obs_fa_df.empty:
-        obs_fa_df['obs_mz'] = obs_fa_df['obs_mz'].astype(float).round(4)
-        obs_fa_df['obs_ppm'] = obs_fa_df['obs_ppm'].astype(int).tolist()
-        obs_fa_df['obs_i_r'] = obs_fa_df['obs_i_r'].astype(float).round(1)
+    obs_fa_lst = ident_info_dct['OBS_FA']
+    obs_lyso_lst = ident_info_dct['OBS_LYSO']
+    lipid_c_fa = NameParserFA(l_c).lipid_fa_dct[l_c]
+    _fa_sn_lst = lipid_c_fa[1]
+    fa_list = []
+    for _f in _fa_sn_lst:
+        fa_list = list(set(fa_list + obs_info_df[_f].tolist()))
+    obs_ident_df['c_check'] = ''
 
-    if 'OBS_LYSO' in list(ident_info_dct.keys()):
-        obs_lyso_df = ident_info_dct['OBS_LYSO']
-        if not obs_lyso_df.empty:
-            obs_lyso_df['obs_mz'] = obs_lyso_df['obs_mz'].astype(float).round(4)
-            obs_lyso_df['obs_ppm'] = obs_lyso_df['obs_ppm'].astype(int).tolist()
-            obs_lyso_df['obs_i_r'] = obs_lyso_df['obs_i_r'].astype(float).round(1)
-            obs_dg_na_df = obs_lyso_df.loc[obs_lyso_df['TYPE'] == 'NL_Na']
-            obs_dg_na_df.reset_index(drop=True, inplace=True)
-            obs_dg_na_idx = obs_lyso_df.index[obs_lyso_df['TYPE'] == 'NL_Na'].tolist()
-        else:
-            obs_dg_na_df = pd.DataFrame()
-            obs_dg_na_idx = []
-    else:
-        obs_lyso_df = pd.DataFrame()
-        obs_dg_na_df = pd.DataFrame()
-        obs_dg_na_idx = []
+    # TODO: find a better solution
+    for _fa in fa_list:
+        obs_ident_df.loc[obs_ident_df.fa_abbr == _fa, 'c_check'] = True
+    obs_ident_df.loc[obs_ident_df.fa == 'M', 'c_check'] = True
+    obs_ident_df['obs_mz'] = obs_ident_df['obs_mz'].astype(float).round(4)
+    obs_ident_df['obs_ppm'] = obs_ident_df['obs_ppm'].astype(int).tolist()
+    obs_ident_df['obs_i_r'] = obs_ident_df['obs_i_r'].astype(float).round(1)
+
+
+    obs_fa_df = ident_info_dct['OBS_FA']
+    obs_lyso_df = ident_info_dct['OBS_LYSO']
 
     isotope_score = isotope_score_info_dct['isotope_score']
     isotope_checker_dct = isotope_score_info_dct['isotope_checker_dct']
@@ -177,68 +176,9 @@ def plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_sco
     # remove identified FA
     ident_peak_lst = obs_ident_df['obs_abbr'].values.tolist()
     ident_peak_lst.sort()
-    ident_peak_lst = set(ident_peak_lst)
-    frag_idx_lst = []
-    mg_idx_lst = []
-    dg_Na_idx_lst = []
-    nl_idx_lst = []
-    obs_mg_df = obs_fa_df.loc[obs_fa_df['TYPE'] == 'MG']
-    obs_mg_df.reset_index(drop=True, inplace=True)
-    # Need this because we need to keep their original position in the DF to remove them later
-    obs_mg_idx = obs_fa_df.index[obs_fa_df['TYPE'] == 'MG'].tolist()
-    # obs_dg_na_df = obs_lyso_df.loc[obs_lyso_df['TYPE'] == 'NL_Na']
-    # obs_dg_na_df.reset_index(drop=True, inplace=True)
-    # obs_dg_na_idx = obs_lyso_df.index[obs_lyso_df['TYPE'] == 'NL_Na'].tolist()
-
-    if isinstance(obs_fa_df, pd.DataFrame) and not obs_fa_df.empty:
-        for _idx, _ion_se in obs_fa_df.iterrows():
-            # if _ion_se['obs_abbr'] in ident_peak_lst:
-            if _ion_se['obs_abbr'] in ident_peak_lst and _ion_se['TYPE'] == 'FA':
-                frag_idx_lst.append(_idx)
-    if isinstance(obs_mg_df, pd.DataFrame) and not obs_mg_df.empty:
-        for _idx, _ion_se in obs_mg_df.iterrows():
-            if _ion_se['obs_abbr'] in ident_peak_lst:
-                mg_idx_lst.append(_idx)
-    if isinstance(obs_lyso_df, pd.DataFrame) and not obs_lyso_df.empty:
-        for _idx, _ion_se in obs_lyso_df.iterrows():
-            # if _ion_se['obs_abbr'] in ident_peak_lst:
-            if _ion_se['obs_abbr'] in ident_peak_lst and _ion_se['TYPE'] == 'NL':
-                nl_idx_lst.append(_idx)
-    if isinstance(obs_dg_na_df, pd.DataFrame) and not obs_dg_na_df.empty:
-        for _idx, _ion_se in obs_dg_na_df.iterrows():
-            if _ion_se['obs_abbr'] in ident_peak_lst and _ion_se['TYPE'] == 'NL_Na':
-                dg_Na_idx_lst.append(_idx)
-        plt_obs_dg_na_df = pd.DataFrame(obs_dg_na_df.drop(dg_Na_idx_lst))
-    else:
-        plt_obs_dg_na_df = pd.DataFrame()
-    # from the below we remove all of the MG for TG because there is another table for them
-    plt_obs_fa_df = pd.DataFrame(obs_fa_df.drop(frag_idx_lst + obs_mg_idx))
-    plt_obs_mg_df = pd.DataFrame(obs_mg_df.drop(mg_idx_lst))
-    plt_obs_lyso_df = pd.DataFrame(obs_lyso_df.drop(nl_idx_lst + obs_dg_na_idx))
 
     # add specific ion info
     txt_props = {'ha': 'left', 'va': 'bottom'}
-    # obs_ident_df['i_r'] = obs_ident_df['i'] * 1.025
-    if not plt_obs_fa_df.empty:
-        pass
-        # plt_obs_fa_df['i_r'] = obs_fa_df['i'] * 1.025
-    else:
-        plt_obs_fa_df = False
-    if not plt_obs_mg_df.empty:
-        pass
-        # plt_obs_mg_df['i_r'] = obs_mg_df['i'] * 1.025
-    else:
-        plt_obs_mg_df = False
-    if not plt_obs_lyso_df.empty:
-        pass
-        # plt_obs_lyso_df['i_r'] = obs_lyso_df['i'] * 1.075
-    else:
-        plt_obs_lyso_df = False
-    if not plt_obs_dg_na_df.empty:
-        pass
-        # plt_obs_dg_na_df['i_r'] = obs_dg_na_df['i'] * 1.075
-    else:
-        plt_obs_dg_na_df = False
 
     if 'OTHER_FRAG' in list(specific_dct.keys()):
         other_frag_df = specific_dct['OTHER_FRAG']
@@ -247,6 +187,11 @@ def plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_sco
         other_frag_df = False
     if 'OTHER_NL' in list(specific_dct.keys()):
         other_nl_df = specific_dct['OTHER_NL']
+        # TODO: Temporary solution (already thinking a way to be solve
+        if l_c == 'Cer':
+            other_nl_df = other_nl_df[other_nl_df['LABEL'] != '[M+H-H2O]+']
+            if other_nl_df.empty:
+                other_nl_df = False
         # other_nl_df['i_r'] = other_nl_df['i'] * 1.2
     else:
         other_nl_df = False
@@ -527,7 +472,6 @@ def plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_sco
         # _t_img_0 = time.time()
         # print(core_count, 'start to plot FULL MS/MS ...')
         msms_pic = pic_array[0, 1]
-
         # plot identification table
         ident_col_labels = ('Proposed_structure', 'Score')
         _ident_table_df = pd.DataFrame(data={'Proposed_structure': obs_info_df['DISCRETE_ABBR'].values.tolist(),
@@ -540,7 +484,6 @@ def plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_sco
         ident_table = msms_pic.table(cellText=ident_table_vals, colWidths=ident_col_width_lst,
                                      colLabels=ident_col_labels, loc='upper center', cellLoc='center')
         ident_table.set_fontsize(8)
-
         # plot MS/MS
         marker_l, stem_l, base_l = msms_pic.stem(ms2_df['mz'].values.tolist(), ms2_df['i'].values.tolist(),
                                                  markerfmt=' ', basefmt='k-', use_line_collection=True)  # zorder=10
@@ -556,15 +499,22 @@ def plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_sco
         else:
             msms_pic.set_xlim([min(ms2_df['mz'].values.tolist()) - 1, ms2_pr_mz + 20])
         msms_pic.set_ylim([0, _msms_max * 1.5])
-
-        if obs_ident_df is not False:
-            marker_l, stem_l, base_l = msms_pic.stem(obs_ident_df['mz'], obs_ident_df['i'], markerfmt=' ',
+        if not obs_ident_df[obs_ident_df['c_check'] == True].empty:
+            obs_s_t = obs_ident_df[obs_ident_df['c_check'] == True]
+            marker_l, stem_l, base_l = msms_pic.stem(obs_s_t['mz'],obs_s_t['i'], markerfmt=' ',
                                                      use_line_collection=True)
             plt.setp(stem_l, color=(0, 0.7, 1.0, 0.5), linewidth=1.2)
             plt.setp(base_l, visible=False)
         else:
             pass
-
+        if not obs_ident_df[obs_ident_df['c_check'] == ""].empty:
+            obs_s_t2 = obs_ident_df[obs_ident_df['c_check'] == ""]
+            marker_l, stem_l, base_l = msms_pic.stem(obs_s_t2['mz'], obs_s_t2['i'], markerfmt=' ',
+                                                     use_line_collection=True)
+            plt.setp(stem_l, color=(0.8, 0.0, 0.0, 0.4), linewidth=1.2)
+            plt.setp(base_l, visible=False)
+        else:
+            pass
         if other_frag_df is not False:
             marker_l, stem_l, base_l = msms_pic.stem(other_frag_df['mz'], other_frag_df['i'], markerfmt=' ',
                                                      use_line_collection=True)
@@ -592,20 +542,7 @@ def plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_sco
                               fontsize=7, color=(0.8, 0.0, 0.0, 1), rotation=60)
         else:
             pass
-        if plt_obs_fa_df is not False:
-            marker_l, stem_l, base_l = msms_pic.stem(plt_obs_fa_df['mz'], plt_obs_fa_df['i'], markerfmt=' ',
-                                                     use_line_collection=True)
-            plt.setp(stem_l, color=(0.8, 0.0, 0.0, 0.4), linewidth=1.2)
-            plt.setp(base_l, visible=False)
-        else:
-            pass
-        if plt_obs_lyso_df is not False:
-            marker_l, stem_l, base_l = msms_pic.stem(plt_obs_lyso_df['mz'], plt_obs_lyso_df['i'], markerfmt=' ',
-                                                     use_line_collection=True)
-            plt.setp(stem_l, color=(0.8, 0.0, 0.0, 0.4), linewidth=1.2)
-            plt.setp(base_l, visible=False)
-        else:
-            pass
+
         if target_frag_df is not False:
             marker_l, stem_l, base_l = msms_pic.stem(target_frag_df['mz'], target_frag_df['i'], markerfmt=' ',
                                                      use_line_collection=True)
@@ -636,7 +573,6 @@ def plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_sco
 
         msms_title_str = ('MS/MS for m/z %.4f | DDA rank %d @ %.3f min' % (ms2_pr_mz, func_id, ms2_rt))
         msms_pic.set_title(msms_title_str, color=(0.0, 0.65, 1.0, 1.0), fontsize=8, y=0.98)
-
         # print(core_count, 'plot FULL MSMS in ', time.time() - _t_img_0)
 
     def plot_msms_low():
@@ -648,52 +584,30 @@ def plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_sco
         msms_low_pic.set_xlabel("m/z", fontsize=7, labelpad=-1)
         msms_low_pic.set_ylabel("Intensity", fontsize=7)
 
-        # plot fa frag identification table
-        if not obs_fa_df.empty:
-
-            _fa_col_labels = ('#', 'identification', 'm/z', 'ppm', 'i (%)')
-            # Create a second table with the MG fragments for TG
-            if obs_fa_df.loc[obs_fa_df['TYPE'] == 'MG']['obs_abbr'].shape[0] > 0:
-                _fa_table_df2 = pd.DataFrame(data={
-                    '#': obs_fa_df.loc[obs_fa_df['TYPE'] == 'MG']['obs_rank'].astype(int).tolist(),
-                    'identification': obs_fa_df.loc[obs_fa_df['TYPE'] == 'MG']['obs_abbr'].values.tolist(),
-                    'm/z': obs_fa_df.loc[obs_fa_df['TYPE'] == 'MG']['obs_mz'].tolist(),
-                    'ppm': obs_fa_df.loc[obs_fa_df['TYPE'] == 'MG']['obs_ppm'].tolist(),
-                    'i (%)': obs_fa_df.loc[obs_fa_df['TYPE'] == 'MG']['obs_i_r'].tolist()})
-                _fa_table_df2 = _fa_table_df2.reindex(columns=_fa_col_labels)
-                _fa_table_vals2 = list(map(list, _fa_table_df2.values))
-                _fa_col_width_lst2 = [0.03, 0.2, 0.10, 0.06, 0.06]
-                _fa_table2 = msms_low_pic.table(cellText=_fa_table_vals2, colWidths=_fa_col_width_lst2,
-                                                colLabels=_fa_col_labels, loc='upper right', cellLoc='center')
-                _fa_table2.set_fontsize(6)
-                for _frag_idx in mg_idx_lst:
-                    for _r in [0, 1, 2, 3, 4]:
-                        _cell = _fa_table2.get_celld()[(_frag_idx + 1, _r)]
-                        _cell.set_color((0, 0.7, 1.0, 0.4))
-            else:
-                _fa_table2 = False
-            # Create the table with the Free FA fragments for TG and PL
-            _fa_ident_lst = obs_fa_df.loc[obs_fa_df['TYPE'] == 'FA']['obs_abbr'].values.tolist()
-            if _fa_ident_lst:
-                _fa_table_df = pd.DataFrame(
-                    data={'#': obs_fa_df.loc[obs_fa_df['TYPE'] == 'FA']['obs_rank'].astype(int).values.tolist(),
-                          'identification': _fa_ident_lst,
-                          'm/z': obs_fa_df.loc[obs_fa_df['TYPE'] == 'FA']['obs_mz'].tolist(),
-                          'ppm': obs_fa_df.loc[obs_fa_df['TYPE'] == 'FA']['obs_ppm'].tolist(),
-                          'i (%)': obs_fa_df.loc[obs_fa_df['TYPE'] == 'FA']['obs_i_r'].tolist()})
-                _fa_table_df = _fa_table_df.reindex(columns=_fa_col_labels)
-                _fa_table_vals = list(map(list, _fa_table_df.values))
-                _fa_col_width_lst = [0.03, 0.2, 0.10, 0.06, 0.06]
-                # _fa_col_width_lst2 = [0.03, 0.2, 0.30, 0.26, 0.26]
-                _fa_table = msms_low_pic.table(cellText=_fa_table_vals, colWidths=_fa_col_width_lst,
-                                               colLabels=_fa_col_labels, loc='upper left', cellLoc='center')
-                _fa_table.set_fontsize(6)
+        _fa_col_labels = ('#', 'identification', 'm/z', 'ppm', 'i (%)')
+        for _g_t in obs_fa_df:
+            obs_s_t = obs_ident_df.query('obs_type_g == @_g_t[0]').reset_index(drop=True)
+            # Note: if problem with the figure consider the possibility to be around here the error
+            frag_idx_lst = obs_s_t[obs_s_t['c_check'] == True].index.tolist()
+            if not obs_s_t.empty:
+                _fa_table = pd.DataFrame(data={'#': obs_s_t['obs_rank'].astype(int).tolist(),
+                                               'identification': obs_s_t['obs_abbr'].values.tolist(),
+                                               'm/z': obs_s_t['obs_mz'].tolist(),
+                                               'ppm': obs_s_t['obs_ppm'].tolist(),
+                                               'i (%)': obs_s_t['obs_i_r'].tolist()})
+                _fa_table = _fa_table.reindex(columns=_fa_col_labels)
+                _fa_table_v = list(map(list, _fa_table.values))
+                _fa_col_width_l = [0.03, 0.2, 0.10, 0.06, 0.06]
+                _fa_t = msms_low_pic.table(cellText=_fa_table_v, colWidths=_fa_col_width_l,
+                                                colLabels=_fa_col_labels, loc=_g_t[1], cellLoc='center')
+                _fa_t.set_fontsize(6)
+                # Note: check if the output is correct
+                # The error here is because the index is differente
                 for _frag_idx in frag_idx_lst:
+                    # [0,1,2,3,4] -> indicates the number of columns which we have in the table
                     for _r in [0, 1, 2, 3, 4]:
-                        _cell = _fa_table.get_celld()[(_frag_idx + 1, _r)]
+                        _cell = _fa_t.get_celld()[(_frag_idx + 1, _r)]
                         _cell.set_color((0, 0.7, 1.0, 0.4))
-            else:
-                _fa_table = False
 
         # msms spectrum zoomed < 400 start
         if not _msms_low_df.empty:
@@ -710,17 +624,17 @@ def plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_sco
             msms_low_pic.set_ylim([0, ms2_df['i'].max()])
 
         _plot_label_lst = []
+        # Question: here is not table color
+        if not obs_ident_df[(obs_ident_df['mz'] <= 400) & (obs_ident_df['c_check'] == True)].empty:
+        # if isinstance(obs_ident_df, pd.DataFrame) and not obs_ident_df.empty:
+            low_obs_ident_df = obs_ident_df[(obs_ident_df['mz'] <= 400) & (obs_ident_df['c_check'] == True)].copy()
+            marker_l, stem_l, base_l = msms_low_pic.stem(low_obs_ident_df['mz'],
+                                                     low_obs_ident_df['i'], markerfmt=' ',
+                                                     use_line_collection=True)
+            plt.setp(stem_l, color=(0, 0.7, 1.0, 0.5), linewidth=1.2)
+            plt.setp(base_l, visible=False)
 
-        if isinstance(obs_ident_df, pd.DataFrame) and not obs_ident_df.empty:
-            low_obs_ident_df = obs_ident_df[obs_ident_df['mz'] <= 400].copy()
-            if not low_obs_ident_df.empty:
-                # low_obs_ident_df.is_copy = False
-                # marker_l, stem_l, base_l = msms_low_pic.stem(low_obs_ident_df['mz'],
-                #                                              low_obs_ident_df['i'], markerfmt=' ',
-                #                                              use_line_collection=True)
-                # plt.setp(stem_l, color=(0, 0.7, 1.0, 0.6), linewidth=1.2)
-                # plt.setp(base_l, visible=False)
-                for _i_idx, _ident_se in low_obs_ident_df.iterrows():
+            for _i_idx, _ident_se in low_obs_ident_df.iterrows():
                     _ident_mz = _ident_se['mz']
                     _ident_i_r = _ident_se['i']
                     _ident_lb = _ident_se['obs_label']
@@ -728,48 +642,27 @@ def plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_sco
                         _plot_label_lst.append(_ident_lb)
                         msms_low_pic.text(_ident_mz, _ident_i_r, _ident_lb, txt_props,
                                           fontsize=8, color=(0, 0.6, 1.0, 1.0), weight='bold', rotation=60)
-            else:
-                pass
+        else:
+            pass
+        #TODO: fix it
+        if not obs_ident_df[(obs_ident_df['mz'] <= 400) & (obs_ident_df['c_check'] == "")].empty:
+            low_plt_obs_fa_df = obs_ident_df[(obs_ident_df['mz'] <= 400) & (obs_ident_df['c_check'] == "")].copy()
+
+            marker_l, stem_l, base_l = msms_low_pic.stem(low_plt_obs_fa_df['mz'], low_plt_obs_fa_df['i'],
+                                                         markerfmt=' ', use_line_collection=True)
+            plt.setp(stem_l, color=(0.8, 0.0, 0.0, 0.4), linewidth=1.2)
+            plt.setp(base_l, visible=False)
+            for _i_f_idx, _frag_se in low_plt_obs_fa_df.iterrows():
+                _frag_mz = _frag_se['mz']
+                _frag_i_r = _frag_se['i']
+                _frag_lb = _frag_se['obs_label']
+                if _frag_lb not in _plot_label_lst:
+                    _plot_label_lst.append(_frag_lb)
+                    msms_low_pic.text(_frag_mz, _frag_i_r, _frag_lb, txt_props, fontsize=6,
+                                      color=(0.8, 0.0, 0.0, 1), rotation=60)
         else:
             pass
 
-        if isinstance(plt_obs_fa_df, pd.DataFrame) and not plt_obs_fa_df.empty:
-            low_plt_obs_fa_df = plt_obs_fa_df[plt_obs_fa_df['mz'] <= 400].copy()
-            if not low_plt_obs_fa_df.empty:
-                # low_plt_obs_fa_df.is_copy = False
-                marker_l, stem_l, base_l = msms_low_pic.stem(low_plt_obs_fa_df['mz'], low_plt_obs_fa_df['i'],
-                                                             markerfmt=' ', use_line_collection=True)
-                plt.setp(stem_l, color=(0.8, 0.0, 0.0, 0.4), linewidth=1.2)
-                plt.setp(base_l, visible=False)
-                for _i_f_idx, _frag_se in low_plt_obs_fa_df.iterrows():
-                    _frag_mz = _frag_se['mz']
-                    _frag_i_r = _frag_se['i']
-                    _frag_lb = _frag_se['obs_label']
-                    if _frag_lb not in _plot_label_lst:
-                        _plot_label_lst.append(_frag_lb)
-                        msms_low_pic.text(_frag_mz, _frag_i_r, _frag_lb, txt_props, fontsize=6,
-                                          color=(0.8, 0.0, 0.0, 1), rotation=60)
-        else:
-            pass
-
-        if isinstance(plt_obs_mg_df, pd.DataFrame) and not plt_obs_mg_df.empty:
-            low_plt_obs_mg_df = plt_obs_mg_df[plt_obs_mg_df['mz'] <= 400].copy()
-            if not low_plt_obs_mg_df.empty:
-                # low_plt_obs_mg_df.is_copy = False
-                marker_l, stem_l, base_l = msms_low_pic.stem(low_plt_obs_mg_df['mz'], low_plt_obs_mg_df['i'],
-                                                             markerfmt=' ', use_line_collection=True)
-                plt.setp(stem_l, color=(0.8, 0.0, 0.0, 0.4), linewidth=1.2, alpha=0.4)
-                plt.setp(base_l, visible=False)
-                for _i_f_idx, _frag_se in low_plt_obs_mg_df.iterrows():
-                    _frag_mz = _frag_se['mz']
-                    _frag_i_r = _frag_se['i']
-                    _frag_lb = _frag_se['obs_label']
-                    if _frag_lb not in _plot_label_lst:
-                        _plot_label_lst.append(_frag_lb)
-                        msms_low_pic.text(_frag_mz, _frag_i_r, _frag_lb, txt_props,
-                                          fontsize=6, color=(0.8, 0.0, 0.0, 1), rotation=60)
-        else:
-            pass
         # add specific ion info
         if isinstance(other_frag_df, pd.DataFrame) and not other_frag_df.empty:
             low_other_frag_df = other_frag_df[other_frag_df['mz'] <= 400].copy()
@@ -802,45 +695,6 @@ def plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_sco
         else:
             pass
 
-        # Check missing part from higher m/z
-        if isinstance(plt_obs_lyso_df, pd.DataFrame) and not plt_obs_lyso_df.empty:
-            low_plt_obs_lyso_df = plt_obs_lyso_df[plt_obs_lyso_df['mz'] <= 400].copy()
-            if not low_plt_obs_lyso_df.empty:
-                # low_plt_obs_lyso_df.is_copy = False
-                marker_l, stem_l, base_l = msms_low_pic.stem(low_plt_obs_lyso_df['mz'], low_plt_obs_lyso_df['i'],
-                                                             markerfmt=' ', use_line_collection=True)
-                plt.setp(stem_l, color=(0.8, 0.0, 0.0, 0.4), linewidth=1.2, alpha=0.4)
-                plt.setp(base_l, visible=False)
-                for _i_nl_idx, _nl_se in low_plt_obs_lyso_df.iterrows():
-                    _nl_mz = _nl_se['mz']
-                    _nl_i_r = _nl_se['i']
-                    _nl_lb = _nl_se['obs_label']
-                    if _nl_lb not in _plot_label_lst:
-                        _plot_label_lst.append(_nl_lb)
-                        msms_low_pic.text(_nl_mz, _nl_i_r, _nl_lb, txt_props, fontsize=6,
-                                          color=(0.8, 0.0, 0.0, 1), rotation=60)
-        else:
-            pass
-
-        if isinstance(plt_obs_dg_na_df, pd.DataFrame) and not plt_obs_dg_na_df.empty:
-            low_plt_obs_dg_na_df = plt_obs_dg_na_df[plt_obs_dg_na_df['mz'] <= 400].copy()
-            if not low_plt_obs_dg_na_df.empty:
-                # low_plt_obs_dg_na_df.is_copy = False
-                marker_l, stem_l, base_l = msms_low_pic.stem(low_plt_obs_dg_na_df['mz'], low_plt_obs_dg_na_df['i'],
-                                                             markerfmt=' ', use_line_collection=True)
-                plt.setp(stem_l, color=(0.8, 0.0, 0.0, 0.4), linewidth=1.2, alpha=0.4)
-                plt.setp(base_l, visible=False)
-                for _i_nl_idx, _nl_se in low_plt_obs_dg_na_df.iterrows():
-                    _nl_mz = _nl_se['mz']
-                    _nl_i_r = _nl_se['i']
-                    _nl_lb = _nl_se['obs_label']
-                    if _nl_lb not in _plot_label_lst:
-                        _plot_label_lst.append(_nl_lb)
-                        msms_low_pic.text(_nl_mz, _nl_i_r, _nl_lb, txt_props, fontsize=6,
-                                          color=(0.8, 0.0, 0.0, 1), rotation=60)
-        else:
-            pass
-
         if isinstance(other_nl_df, pd.DataFrame) and not other_nl_df.empty:
             low_other_nl_df = other_nl_df[other_nl_df['mz'] <= 400].copy()
             if not low_other_nl_df.empty:
@@ -857,16 +711,6 @@ def plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_sco
                                       fontsize=7, color=(0.8, 0.0, 0.0, 1), rotation=60)
         else:
             pass
-
-        if isinstance(obs_ident_df, pd.DataFrame) and not obs_ident_df.empty:
-            low_obs_ident_df = obs_ident_df[obs_ident_df['mz'] <= 400].copy()
-            if not low_obs_ident_df.empty:
-                # low_obs_ident_df.is_copy = False
-                marker_l, stem_l, base_l = msms_low_pic.stem(low_obs_ident_df['mz'],
-                                                             low_obs_ident_df['i'], markerfmt=' ',
-                                                             use_line_collection=True)
-                plt.setp(stem_l, color=(0, 0.7, 1.0, 0.5), linewidth=1.2)
-                plt.setp(base_l, visible=False)
 
         # msms_low_pic.set_ylim([0, _msms_max * 1.5])
         msms_low_str = 'MS/MS zoomed below m/z 400'
@@ -886,68 +730,30 @@ def plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_sco
 
         # plot fa nl identification table
         # For TG in [M+Na]+ there will be 2 different plots in this section
-        if not obs_lyso_df.empty:
-            _lyso_col_labels = ('#', 'identification', 'm/z', 'ppm', 'i (%)')
-            if obs_lyso_df.loc[obs_lyso_df['TYPE'] == 'NL_Na']['obs_abbr'].shape[0] > 0:
-                _lyso_table_df2 = pd.DataFrame(
-                    data={'#': obs_lyso_df.loc[obs_lyso_df['TYPE'] == 'NL_Na']['obs_rank'].astype(int).values.tolist(),
-                          'identification': obs_lyso_df.loc[obs_lyso_df['TYPE'] == 'NL_Na']['obs_abbr'].values.tolist(),
-                          'm/z': obs_lyso_df.loc[obs_lyso_df['TYPE'] == 'NL_Na']['obs_mz'].tolist(),
-                          'ppm': obs_lyso_df.loc[obs_lyso_df['TYPE'] == 'NL_Na']['obs_ppm'].tolist(),
-                          'i (%)': obs_lyso_df.loc[obs_lyso_df['TYPE'] == 'NL_Na']['obs_i_r'].tolist()})
-                _lyso_table_df2 = _lyso_table_df2.reindex(columns=_lyso_col_labels)
-                _lyso_table_vals2 = list(map(list, _lyso_table_df2.values))
-                _lyso_col_width_lst2 = [0.03, 0.2, 0.10, 0.06, 0.06]
-                _lyso_table2 = msms_high_pic.table(cellText=_lyso_table_vals2, colWidths=_lyso_col_width_lst2,
-                                                   colLabels=_lyso_col_labels, loc='upper right', cellLoc='center',
-                                                   bbox=[0.5, 1 - (0.067 * (len(_lyso_table_vals2) + 1)), 0.45,
-                                                         0.067 * (len(_lyso_table_vals2) + 1)])
-                # set back ground of the table
-                _lyso_table2.set_fontsize(6)
-                for _nl_idx in dg_Na_idx_lst:
+        _lyso_col_labels = ('#', 'identification', 'm/z', 'ppm', 'i (%)')
+        for _g_t in obs_lyso_df:
+            obs_s_t = obs_ident_df.query('obs_type_g == @_g_t[0]').reset_index(drop=True)
+            # Note: if problem with the figure consider the possibility to be around here the error
+            frag_idx_lst = obs_s_t[obs_s_t['c_check'] == True].index.tolist()
+            if not obs_s_t.empty:
+                _lyso_table = pd.DataFrame(data={'#': obs_s_t['obs_rank'].astype(int).tolist(),
+                                               'identification': obs_s_t['obs_abbr'].values.tolist(),
+                                               'm/z': obs_s_t['obs_mz'].tolist(),
+                                               'ppm': obs_s_t['obs_ppm'].tolist(),
+                                               'i (%)': obs_s_t['obs_i_r'].tolist()})
+                _lyso_table = _lyso_table.reindex(columns=_lyso_col_labels)
+                _lyso_table_v = list(map(list, _lyso_table.values))
+                _lyso_col_width_l = [0.03, 0.2, 0.10, 0.06, 0.06]
+                _lyso_t = msms_high_pic.table(cellText=_lyso_table_v, colWidths=_lyso_col_width_l,
+                                           colLabels=_lyso_col_labels, loc=_g_t[1], cellLoc='center')
+                _lyso_t.set_fontsize(6)
+                # Note: check if the output is correct
+                # The error here is because the index is differente
+                for _frag_idx in frag_idx_lst:
+                    # [0,1,2,3,4] -> indicates the number of columns which we have in the table
                     for _r in [0, 1, 2, 3, 4]:
-                        if _lyso_table2 is False:
-                            pass
-                        else:
-                            _cell = _lyso_table2.get_celld()[(_nl_idx + 1, _r)]
-                            _cell.set_color((0, 0.7, 1.0, 0.4))
-            else:
-                _lyso_table2 = False
-            if obs_lyso_df.loc[obs_lyso_df['TYPE'] == 'NL']['obs_abbr'].shape[0] > 0:
-                _lyso_table_df = pd.DataFrame(
-                    data={'#': obs_lyso_df.loc[obs_lyso_df['TYPE'] == 'NL']['obs_rank'].astype(int).values.tolist(),
-                          'identification': obs_lyso_df.loc[obs_lyso_df['TYPE'] == 'NL']['obs_abbr'].values.tolist(),
-                          'm/z': obs_lyso_df.loc[obs_lyso_df['TYPE'] == 'NL']['obs_mz'].tolist(),
-                          'ppm': obs_lyso_df.loc[obs_lyso_df['TYPE'] == 'NL']['obs_ppm'].tolist(),
-                          'i (%)': obs_lyso_df.loc[obs_lyso_df['TYPE'] == 'NL']['obs_i_r'].tolist()})
-                _lyso_table_df = _lyso_table_df.reindex(columns=_lyso_col_labels)
-                _lyso_table_vals = list(map(list, _lyso_table_df.values))
-                _lyso_col_width_lst = [0.03, 0.2, 0.10, 0.06, 0.06]
-                if charge in ['[M+H]+', '[M+NH4]+'] and abbr[0:2] == 'TG':
-                    _lyso_table = msms_high_pic.table(cellText=_lyso_table_vals, colWidths=_lyso_col_width_lst,
-                                                      colLabels=_lyso_col_labels, loc='upper center', cellLoc='center',
-                                                      bbox=[0.4, 1 - (0.067 * (len(_lyso_table_vals) + 1)), 0.5,
-                                                            0.067 * (len(_lyso_table_vals) + 1)])
-                elif charge in ['[M+Na]+'] and abbr[0:2] == 'TG':
-                    _lyso_table = msms_high_pic.table(cellText=_lyso_table_vals, colWidths=_lyso_col_width_lst,
-                                                      colLabels=_lyso_col_labels, loc='upper left', cellLoc='center',
-                                                      bbox=[0, 1 - (0.067 * (len(_lyso_table_vals) + 1)), 0.45,
-                                                            0.067 * (len(_lyso_table_vals) + 1)])
-                else:
-                    _lyso_table = msms_high_pic.table(cellText=_lyso_table_vals, colWidths=_lyso_col_width_lst,
-                                                      colLabels=_lyso_col_labels, loc='upper center', cellLoc='center')
-
-                # set back ground of the table
-                _lyso_table.set_fontsize(6)
-                for _nl_idx in nl_idx_lst:
-                    for _r in [0, 1, 2, 3, 4]:
-                        if _lyso_table is False:
-                            pass
-                        else:
-                            _cell = _lyso_table.get_celld()[(_nl_idx + 1, _r)]
-                            _cell.set_color((0, 0.7, 1.0, 0.4))
-            else:
-                _lyso_table = False
+                        _cell = _lyso_t.get_celld()[(_frag_idx + 1, _r)]
+                        _cell.set_color((0, 0.7, 1.0, 0.4))
 
         # msms spectrum zoomed > 400 start
         if not _msms_high_df.empty:
@@ -964,65 +770,39 @@ def plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_sco
 
         _plot_label_lst = []
 
-        if isinstance(obs_ident_df, pd.DataFrame):
-            high_obs_ident_df = obs_ident_df[obs_ident_df['mz'] > 400].copy()
-            if not high_obs_ident_df.empty:
-                # high_obs_ident_df.is_copy = False
-                # high_obs_ident_df['i'] = high_obs_ident_df['i'] * 1.025
-                # marker_l, stem_l, base_l = msms_high_pic.stem(high_obs_ident_df['mz'],
-                #                                               high_obs_ident_df['i'], markerfmt=' ',
-                #                                               use_line_collection=True)
-                # plt.setp(stem_l, color=(0, 0.7, 1.0, 0.6), linewidth=1.2)
-                # plt.setp(base_l, visible=False)
-                for _i_idx, _ident_se in high_obs_ident_df.iterrows():
-                    _ident_mz = _ident_se['mz']
-                    _ident_i_r = _ident_se['i']
-                    _ident_lb = _ident_se['obs_label']
-                    if _ident_lb not in _plot_label_lst:
-                        _plot_label_lst.append(_ident_lb)
-                        msms_high_pic.text(_ident_mz, _ident_i_r, _ident_lb, txt_props,
-                                           fontsize=8, color=(0, 0.6, 1.0, 1.0), weight='bold', rotation=60)
-
-            else:
-                pass
+        if not obs_ident_df[(obs_ident_df['mz'] >= 400) & (obs_ident_df['c_check'] == True)].empty:
+            high_obs_ident_df = obs_ident_df[(obs_ident_df['mz'] >= 400) & (obs_ident_df['c_check'] == True)].copy()
+            marker_l, stem_l, base_l = msms_high_pic.stem(high_obs_ident_df['mz'],
+                                                          high_obs_ident_df['i'], markerfmt=' ',
+                                                          use_line_collection=True)
+            plt.setp(stem_l, color=(0, 0.7, 1.0, 0.5), linewidth=1.2)
+            plt.setp(base_l, visible=False)
+            for _i_idx, _ident_se in high_obs_ident_df.iterrows():
+                _ident_mz = _ident_se['mz']
+                _ident_i_r = _ident_se['i']
+                _ident_lb = _ident_se['obs_label']
+                if _ident_lb not in _plot_label_lst:
+                    _plot_label_lst.append(_ident_lb)
+                    msms_high_pic.text(_ident_mz, _ident_i_r, _ident_lb, txt_props,
+                                       fontsize=8, color=(0, 0.6, 1.0, 1.0), weight='bold', rotation=60)
         else:
             pass
 
-        if isinstance(plt_obs_lyso_df, pd.DataFrame):
-            high_plt_obs_lyso_df = plt_obs_lyso_df[plt_obs_lyso_df['mz'] > 400].copy()
-            if not high_plt_obs_lyso_df.empty:
-                # high_plt_obs_lyso_df.is_copy = False
-                marker_l, stem_l, base_l = msms_high_pic.stem(high_plt_obs_lyso_df['mz'], high_plt_obs_lyso_df['i'],
-                                                              markerfmt=' ', use_line_collection=True)
-                plt.setp(stem_l, color=(0.8, 0.0, 0.0, 0.4), linewidth=1.2)
-                plt.setp(base_l, visible=False)
-                for _i_nl_idx, _nl_se in high_plt_obs_lyso_df.iterrows():
-                    _nl_mz = _nl_se['mz']
-                    _nl_i_r = _nl_se['i']
-                    _nl_lb = _nl_se['obs_label']
-                    if _nl_lb not in _plot_label_lst:
-                        _plot_label_lst.append(_nl_lb)
-                        msms_high_pic.text(_nl_mz, _nl_i_r, _nl_lb, txt_props,
-                                           fontsize=6, color=(0.8, 0.0, 0.0, 1), rotation=60)
-        else:
-            pass
+        if not obs_ident_df[(obs_ident_df['mz'] >= 400) & (obs_ident_df['c_check'] == "")].empty:
+            high_plt_obs_lyso_df = obs_ident_df[(obs_ident_df['mz'] >= 400) & (obs_ident_df['c_check'] == "")].copy()
 
-        if isinstance(plt_obs_dg_na_df, pd.DataFrame):
-            high_plt_obs_dg_na_df = plt_obs_dg_na_df[plt_obs_dg_na_df['mz'] > 400].copy()
-            if not high_plt_obs_dg_na_df.empty:
-                # high_plt_obs_dg_na_df.is_copy = False
-                marker_l, stem_l, base_l = msms_high_pic.stem(high_plt_obs_dg_na_df['mz'], high_plt_obs_dg_na_df['i'],
-                                                              markerfmt=' ', use_line_collection=True)
-                plt.setp(stem_l, color=(0.8, 0.0, 0.0, 0.4), linewidth=1.2)
-                plt.setp(base_l, visible=False)
-                for _i_nl_idx, _nl_se in high_plt_obs_dg_na_df.iterrows():
-                    _nl_mz = _nl_se['mz']
-                    _nl_i_r = _nl_se['i']
-                    _nl_lb = _nl_se['obs_label']
-                    if _nl_lb not in _plot_label_lst:
-                        _plot_label_lst.append(_nl_lb)
-                        msms_high_pic.text(_nl_mz, _nl_i_r, _nl_lb, txt_props,
-                                           fontsize=6, color=(0.8, 0.0, 0.0, 1), rotation=60)
+            marker_l, stem_l, base_l = msms_high_pic.stem(high_plt_obs_lyso_df['mz'], high_plt_obs_lyso_df['i'],
+                                                          markerfmt=' ', use_line_collection=True)
+            plt.setp(stem_l, color=(0.8, 0.0, 0.0, 0.4), linewidth=1.2)
+            plt.setp(base_l, visible=False)
+            for _i_nl_idx, _nl_se in high_plt_obs_lyso_df.iterrows():
+                _nl_mz = _nl_se['mz']
+                _nl_i_r = _nl_se['i']
+                _nl_lb = _nl_se['obs_label']
+                if _nl_lb not in _plot_label_lst:
+                    _plot_label_lst.append(_nl_lb)
+                    msms_high_pic.text(_nl_mz, _nl_i_r, _nl_lb, txt_props,
+                                       fontsize=6, color=(0.8, 0.0, 0.0, 1), rotation=60)
         else:
             pass
 
@@ -1057,46 +837,6 @@ def plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_sco
         else:
             pass
 
-        # Check missing part from lower m/z
-
-        if isinstance(plt_obs_fa_df, pd.DataFrame):
-            high_plt_obs_fa_df = plt_obs_fa_df[plt_obs_fa_df['mz'] > 400].copy()
-            if not high_plt_obs_fa_df.empty:
-                # high_plt_obs_fa_df.is_copy = False
-                marker_l, stem_l, base_l = msms_high_pic.stem(high_plt_obs_fa_df['mz'], high_plt_obs_fa_df['i'],
-                                                              markerfmt=' ', use_line_collection=True)
-                plt.setp(stem_l, color=(0.8, 0.0, 0.0, 0.4), linewidth=1.2, alpha=0.4)
-                plt.setp(base_l, visible=False)
-                for _i_f_idx, _frag_se in high_plt_obs_fa_df.iterrows():
-                    _frag_mz = _frag_se['mz']
-                    _frag_i_r = _frag_se['i']
-                    _frag_lb = _frag_se['obs_label']
-                    if _frag_lb not in _plot_label_lst:
-                        _plot_label_lst.append(_frag_lb)
-                        msms_high_pic.text(_frag_mz, _frag_i_r, _frag_lb, txt_props,
-                                           fontsize=6, color=(0.8, 0.0, 0.0, 1), rotation=60)
-        else:
-            pass
-
-        if isinstance(plt_obs_mg_df, pd.DataFrame):
-            high_plt_obs_mg_df = plt_obs_mg_df[plt_obs_mg_df['mz'] > 400].copy()
-            if not high_plt_obs_mg_df.empty:
-                # high_plt_obs_mg_df.is_copy = False
-                marker_l, stem_l, base_l = msms_high_pic.stem(high_plt_obs_mg_df['mz'], high_plt_obs_mg_df['i'],
-                                                              markerfmt=' ', use_line_collection=True)
-                plt.setp(stem_l, color=(0.8, 0.0, 0.0, 0.4), linewidth=1.2, alpha=0.4)
-                plt.setp(base_l, visible=False)
-                for _i_f_idx, _frag_se in high_plt_obs_mg_df.iterrows():
-                    _frag_mz = _frag_se['mz']
-                    _frag_i_r = _frag_se['i']
-                    _frag_lb = _frag_se['obs_label']
-                    if _frag_lb not in _plot_label_lst:
-                        _plot_label_lst.append(_frag_lb)
-                        msms_high_pic.text(_frag_mz, _frag_i_r, _frag_lb, txt_props,
-                                           fontsize=6, color=(0.8, 0.0, 0.0, 1), rotation=60)
-        else:
-            pass
-
         if isinstance(other_frag_df, pd.DataFrame):
             high_other_frag_df = other_frag_df[other_frag_df['mz'] > 400].copy()
             if not high_other_frag_df.empty:
@@ -1114,17 +854,6 @@ def plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_sco
         else:
             pass
 
-        if isinstance(obs_ident_df, pd.DataFrame):
-            high_obs_ident_df = obs_ident_df[obs_ident_df['mz'] > 400].copy()
-            if not high_obs_ident_df.empty:
-                # high_obs_ident_df.is_copy = False
-                # high_obs_ident_df['i'] = high_obs_ident_df['i'] * 1.025
-                marker_l, stem_l, base_l = msms_high_pic.stem(high_obs_ident_df['mz'],
-                                                              high_obs_ident_df['i'], markerfmt=' ',
-                                                              use_line_collection=True)
-                plt.setp(stem_l, color=(0, 0.7, 1.0, 0.5), linewidth=1.2)
-                plt.setp(base_l, visible=False)
-
         msms_high_str = 'MS/MS zoomed above m/z 400'
         msms_high_pic.set_title(msms_high_str, color=(0.0, 0.65, 1.0, 1.0), fontsize=8, y=0.98)
         # print(core_count, 'plot MSMS > 400 ', time.time() - _t_img_0)
@@ -1132,6 +861,7 @@ def plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_sco
     # all individual sub plot func finished
     # start to generate images
 
+    # Original code
     try:
         tasks = [plot_msms(), plot_msms_low(), plot_msms_high(), plot_xic(), plot_ms(), plot_ms_zoom()]
         with ThreadPoolExecutor(max_workers=2) as executor:
@@ -1154,7 +884,7 @@ def plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_sco
         plt.close()
 
 
-def gen_plot(param_dct_lst, core_count, img_type='png', dpi=300, vendor='waters', ms1_precision=50e-6):
+def gen_plot(l_class, param_dct_lst, core_count, img_type='png', dpi=300, vendor='waters', ms1_precision=50e-6):
     core_count = 'Core #{core}'.format(core=core_count)
 
     if isinstance(param_dct_lst, list):
@@ -1173,8 +903,9 @@ def gen_plot(param_dct_lst, core_count, img_type='png', dpi=300, vendor='waters'
             save_img_as = param_dct['save_img_as']
             print('%s [STATUS] >>> image: %i / %i' % (core_count, img_counter, tot_img_count))
 
+            # Original code
             try:
-                plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_score_info_dct, specific_dct,
+                plot_spectra(l_class, abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_score_info_dct, specific_dct,
                              formula_charged, charge, core_count, save_img_as=save_img_as, img_type=img_type,
                              dpi=dpi, vendor=vendor, ms1_precision=ms1_precision)
             except Exception as e:
@@ -1195,8 +926,10 @@ def gen_plot(param_dct_lst, core_count, img_type='png', dpi=300, vendor='waters'
             formula_charged = param_dct['formula_charged']
             charge = param_dct['charge']
             save_img_as = param_dct['save_img_as']
+
+            # Original code
             try:
-                plot_spectra(abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_score_info_dct, specific_dct,
+                plot_spectra(l_class, abbr, mz_se, xic_df, ident_info_dct, spec_info_dct, isotope_score_info_dct, specific_dct,
                              formula_charged, charge, core_count, save_img_as=save_img_as, img_type=img_type,
                              dpi=dpi, vendor=vendor, ms1_precision=ms1_precision)
             except Exception as e:
