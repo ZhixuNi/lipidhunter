@@ -23,7 +23,6 @@ import re
 class ElemCalc:
     def __init__(self):
 
-        # Note: can be compine in a unify dct (georgia: 23.1.2019)
         pa_hg_elem = {'C': 0, 'H': 3, 'O': 4, 'P': 1, 'N': 0, 'Na': 0}
         pl_elem_gen = {'C': 3, 'H': 2, 'O': 4, 'P': 0, 'N': 0, 'Na': 0}
         pc_hg_elem = {'C': 5, 'H': 14, 'O': 4, 'P': 1, 'N': 1, 'Na': 0}

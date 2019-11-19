@@ -136,20 +136,16 @@ def get_all_fa_nl(fa_df, ms2_df, peak_type_lst, lipid_type='LPL'):
     # Need to add a control check in case there columns inside the fa-df with nan values (which cause problems)
     for _idx, _fa_se in fa_df.iterrows():
         for peak_typ in peak_type_lst:
-
-            # !! IMPORTANT HERE !!
-            # TG use lite_info_df for get_all_fa_nl
-            # PL use fa_df for get_all_fa_nl
-
-            # default peak_typ for TG is with FA1/FA2/FA3
-            # e.g. ['[M-(FA1)+H]+', '[M-(FA2)+H]+', '[M-(FA3)+H]+']
-            # default peak_typ for PL is with NO FA assignment
-            # e.g. ['[FA-H]-', '[LPE-H]-', '[LPE-H2O-H]-']
-
             _q_str = _fa_se[peak_typ]
-            _q_tmp_df = ms2_df.query(_q_str).copy()
+
+            if not pd.isna(_q_str) :
+                _q_tmp_df = ms2_df.query(_q_str).copy()
+                peak_typ = peak_typ.replace('_Q', '')
+            else:
+                _q_tmp_df = pd.DataFrame()
+
             # _q_tmp_df.is_copy = False
-            peak_typ = peak_typ.replace('_Q', '')
+
             if not _q_tmp_df.empty:
                 _q_tmp_df.loc[:, 'lib_mz'] = _fa_se['%s_MZ' % peak_typ]
                 _q_tmp_df.loc[:, 'obs_mz'] = _q_tmp_df['mz']
@@ -263,7 +259,7 @@ def prep_rankscore (obs_d, obs_dct, origin_info_df, sliced_info_df, weight_dct, 
 
         _fa_f = 0
         for _i in _fa_sn_lst:
-            print (_i)
+
             if _i == 'M':
                 _fa_abbr = 'H2O'
             else:
@@ -274,16 +270,16 @@ def prep_rankscore (obs_d, obs_dct, origin_info_df, sliced_info_df, weight_dct, 
                 else:
                     _sum_fa_abbr_dct[_fa_abbr] = [_i]
             _obs_df_fa = obs_d.query('fa == @_i and fa_abbr == @_fa_abbr')
-            print ('1')
+
             if not _obs_df_fa.empty:
                 # Note: checking if found any type of fragments, later will included only specific ones
                 _fa_f = _fa_f + 1
-                print('2')
+
                 _obs_type_frag_lst = _obs_df_fa['obs_type'].tolist()
-                print('3')
+
                 for _idx2,_f_s in _obs_df_fa.iterrows():
                     _f_w = _f_s['obs_type']
-                    print (_f_w)
+
                     if _f_w in weight_dct.index.tolist():
                         origin_info_df.at[_idx, '{f}_i'.format(f=_f_w)] = _f_s['i']
                         origin_info_df.at[_idx, '{f}_i_per'.format(f=_f_w)] = _f_s['obs_i_r']
@@ -296,7 +292,7 @@ def prep_rankscore (obs_d, obs_dct, origin_info_df, sliced_info_df, weight_dct, 
                             _ident_peak_count += 1
             if _i != 'M':
                 origin_info_df.at[_idx, _i] = _lite_se[_i]
-        print ('come on')
+
         origin_info_df.at[_idx, 'RESI_CHK'] = _fa_f
         origin_info_df.at[_idx, 'total_fa'] = len(_fa_sn_lst)
         # origin_info_df.at[_idx, 'fa1'] = _lite_se['FA1']
@@ -304,16 +300,15 @@ def prep_rankscore (obs_d, obs_dct, origin_info_df, sliced_info_df, weight_dct, 
         # origin_info_df.at[_idx, 'fa3'] = _lite_se['FA3']
 
         _unique_fa_abbr_lst = list(set(_sum_fa_abbr_lst))
-        print ('well where is the issue')
         _obs_df_fa_r = fragment_rank(weight_dct, obs_d)
         for _fa_abbr in _unique_fa_abbr_lst:
-            print (_fa_abbr)
+            # TODO: error with bigger FA list run
+
             _fa_count = _sum_fa_abbr_lst.count(_fa_abbr)
             _obs_df_fa_2 = obs_d.copy()
             _fa_lst = _sum_fa_abbr_dct[_fa_abbr]
 
             if _fa_count > 1:
-
                 _obs_df_fa_2.i.loc[(_obs_df_fa_2['fa_abbr'] == _fa_abbr)] = _obs_df_fa_2.i.loc[(_obs_df_fa_2['fa_abbr'] == _fa_abbr)] / _fa_count
                 _obs_df_fa_2.obs_i_r.loc[(_obs_df_fa_2['fa_abbr'] == _fa_abbr)] = _obs_df_fa_2.obs_i_r.loc[(
                             _obs_df_fa_2['fa_abbr'] == _fa_abbr)] / _fa_count
@@ -336,19 +331,16 @@ def prep_rankscore (obs_d, obs_dct, origin_info_df, sliced_info_df, weight_dct, 
                                 _rank_score += origin_info_df.loc[_idx, '{f}_SCORE'.format(f=_f_w)]
                                 _ident_peak_count += 1
             else:
-
                 _obs_df_fa3 = _obs_df_fa_2.query('fa == @_fa_lst[0] & fa_abbr == @_fa_abbr')
+                if not _obs_df_fa3.empty:
+                    for _f_s3 in _obs_df_fa3['obs_type'].values.tolist():
+                        _rank_score += origin_info_df.loc[_idx, '{f}_SCORE'.format(f=_f_s3)]
 
-                for _f_s3 in _obs_df_fa3['obs_type'].values.tolist():
-                    _rank_score += origin_info_df.loc[_idx, '{f}_SCORE'.format(f=_f_s3)]
-
-                _ident_peak_count += 1
 
 
                 # _obs_df_fa
 
         # unique_fa_abbr_dct[_fa_abbr] = sorted(_fa_abbr_sn_lst)
-        print ('Are you out of your mind')
         _ident_fa_abbr_lst = list(set(_ident_fa_abbr_lst))
         # print(_lipid_abbr, 'rank_score', _rank_score)
         # Question: Why to we need two control check what is the reason for this?
@@ -357,12 +349,13 @@ def prep_rankscore (obs_d, obs_dct, origin_info_df, sliced_info_df, weight_dct, 
             # print(_lipid_abbr, _rank_score)
             origin_info_df.at[_idx, 'RANK_SCORE'] = _rank_score
             origin_info_df.at[_idx, 'OBS_PEAKS'] = int(_ident_peak_count)
-            origin_info_df.at[_idx, 'OBS_RESIDUES'] = len(_sum_fa_abbr_lst)
+            # origin_info_df.at[_idx, 'OBS_RESIDUES'] = len(_sum_fa_abbr_lst)
         # else:
         #     ident_obs_peak_df = pd.DataFrame({'i': [], 'mz': [], 'lib_mz': [], 'obs_mz': [], 'obs_i_r': [],
         #                             'obs_ppm': [], 'obs_ppm_abs': [], 'obs_abbr': [], 'obs_label': [],
         #                             'fa_abbr': [], 'obs_rank': [], 'obs_type_calc': []})
     # Note: Currently ident_obs_peak_df is empty. Untill will now why it is needed and to avoid a few of the possible errors which may occur
+    print (_obs_df_fa_r)
     return _obs_df_fa_r, origin_info_df
 
 def calc_rankscore(obs_df, lite_info_df, lipid_class, weight_dct, rankscore_filter, all_sn=True):
@@ -397,7 +390,7 @@ def calc_rankscore(obs_df, lite_info_df, lipid_class, weight_dct, rankscore_filt
 
     obs_fa_lst = []
     obs_df_n = fragment_rank(weight_dct, obs_df)
-
+    obs_df = obs_df[obs_df['obs_type'].isin(weight_dct.index.tolist())]
     if not lite_info_df.empty:
         # Comment: for know give the lite_info_df untill figure out how to handle and replasce the above code
         ident_peak_df, lite_info_df2 = prep_rankscore(obs_df, obs_df_n, lite_info_df2, lite_info_df, weight_dct,
@@ -407,8 +400,12 @@ def calc_rankscore(obs_df, lite_info_df, lipid_class, weight_dct, rankscore_filt
 
     # Question: how the case where there O- and P- avoiding the error since in those case we do not see any fa fragment?
     # Note: Temporary solution
+    print('hello')
+    # Note: Check the difference between RESI_CHK and OBS_PEAKS and find the difference between the columns and fix the information here
     if lipid_class != 'Cer':
-        lite_info_df2['RANK_SCORE'] = (lite_info_df2['RANK_SCORE'] * lite_info_df2['OBS_RESIDUES']/ lite_info_df2['total_fa']).round(2)
+        lite_info_df2['RANK_SCORE'] = (lite_info_df2['RANK_SCORE'] * lite_info_df2['RESI_CHK']/ lite_info_df2['total_fa']).round(2)
+    else:
+        lite_info_df2['RANK_SCORE'] = lite_info_df2['RANK_SCORE'].round(2)
 
     if not lite_info_df2.empty:
         lite_info_df2 = lite_info_df2[lite_info_df2['RANK_SCORE'] >= rankscore_filter]
@@ -445,14 +442,15 @@ def get_rankscore(fa_df, master_info_df, abbr_bulk, charge, ms2_df, _ms2_idx, li
     else:
         post_ident_peak_df = pd.DataFrame()
         lite_info_df = pd.DataFrame()
-
-    obs_fa_frag_df_g.sort_values(by=['i', 'obs_abbr', 'obs_type_g', 'obs_ppm_abs'], ascending=(False, False, False, True))
-    obs_fa_frag_df_g.drop_duplicates(subset=['obs_abbr', 'obs_type_g'], keep="first", inplace=True)
-    obs_fa_frag_df_g.reset_index(inplace=True, drop=True)
-    obs_fa_frag_df_g['Group'] = ''
-    for _idx, _l_i in post_ident_peak_df.iterrows():
-        obs_fa_frag_df_g.loc[(obs_fa_frag_df_g['fa_abbr'] == _idx[0]) & (obs_fa_frag_df_g['obs_type_g'] == _idx[1]), 'obs_rank'] = _l_i['obs_rank']
-        obs_fa_frag_df_g.loc[(obs_fa_frag_df_g['fa_abbr'] == _idx[0]) & (obs_fa_frag_df_g['obs_type_g'] == _idx[1]), 'Group'] = _l_i['Group']
+    print (obs_fa_frag_df_g)
+    if not obs_fa_frag_df_g.empty:
+        obs_fa_frag_df_g.sort_values(by=['i', 'obs_abbr', 'obs_type_g', 'obs_ppm_abs'], ascending=(False, False, False, True))
+        obs_fa_frag_df_g.drop_duplicates(subset=['obs_abbr', 'obs_type_g'], keep="first", inplace=True)
+        obs_fa_frag_df_g.reset_index(inplace=True, drop=True)
+        obs_fa_frag_df_g['Group'] = ''
+        for _idx, _l_i in post_ident_peak_df.iterrows():
+            obs_fa_frag_df_g.loc[(obs_fa_frag_df_g['fa_abbr'] == _idx[0]) & (obs_fa_frag_df_g['obs_type_g'] == _idx[1]), 'obs_rank'] = _l_i['obs_rank']
+            obs_fa_frag_df_g.loc[(obs_fa_frag_df_g['fa_abbr'] == _idx[0]) & (obs_fa_frag_df_g['obs_type_g'] == _idx[1]), 'Group'] = _l_i['Group']
 
     matched_checker = 0
 

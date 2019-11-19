@@ -52,7 +52,6 @@ class NameParserFA:
         pc_neg = ['[x-CH3]-', '[x-H2O-CH3]-']
         # Note: MG fragment can be move to the pos_gen or to pos_gen2 (georgia: 22.2.2019)
         pos_gen = ['[FA-H2O+H]+', '[FA-H2O]']
-        # pos_gen = ['[FA-H2O+H]+', '[FA-H2O]', '[MG(FA)-H2O+H]+']
         pos_gen2 = ['[x-H2O+H]+']
         pos_sod_gen_the2 = ['[X-(FA)+Na]+', '[X-(FA-H+Na)+H]+']
         pos_gen_the2 = ['[X-(FA)+H]+', '[X-(FA-H2O)+H]+']
@@ -60,12 +59,6 @@ class NameParserFA:
         cer_base_spec = ['[LCB+H]+','[LCB-H2O+H]+', '[LCB-2xH2O+H]+', '[LCB-H2O-CH2O+H]+', '[LCB-3xH2O+H]+', '[LCB-2xH2O-CH2O+H]+']
         cer_base_spec2 = ['[X-H2O+H]+', '[X-2xH2O+H]+', '[X-H2O-CH2O+H]+', '[X-3xH2O+H]+', '[X-2xH2O-CH2O+H]+']
         cer_fa_spec = ['[FA-OH+NH3]+', '[FA-OH+C2H3N]+']
-        # cer_fa_spec2 = ['[x-OH+NH3]+', '[x-OH+C2H3N]+']
-        # pos_gen_the = ['[M-(FA)+H]+', '[M-(FA-H2O)+H]+']
-        # sodium_spec2 = ['[x-H+Na]']
-        # pos_sod_gen_the = ['[M-(FA)+Na]+', '[M-(FA-H+Na)+H]+']
-        # pc_neg2 = ['[LPL(FA)-CH3]-', '[LPL(FA)-H2O-CH3]-']
-        # neg_gen3 = ['[LPL(FA)-H]-', '[LPL(FA)-H2O-H]-']
 
         self.loss_dct = {'[FA-H]-': -self.elem_dct['H'][0],
                          '[FA-H2O]': -(self.elem_dct['H'][0]*2 + self.elem_dct['O'][0]),
@@ -91,9 +84,6 @@ class NameParserFA:
                          '[FA-OH+NH3]+': self.elem_dct['N'][0] + self.elem_dct['H'][0]*2 - self.elem_dct['O'][0],
                          '[FA-OH+C2H3N]+': (self.elem_dct['C'][0] + self.elem_dct['N'][0] + self.elem_dct['H'][0]*2 -
                                             self.elem_dct['O'][0]),
-                         # '[MG(FA)-H2O+H]+': self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
-                         #           + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)
-                         #           - self.elem_dct['H'][0],
                          '[x-H]-': self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
                                    + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)
                                    + self.elem_dct['H'][0] + self.elem_dct['O'][0],
@@ -108,75 +98,11 @@ class NameParserFA:
                                          - self.elem_dct['H'][0]*3,
                          '[x-H2O+H]+': self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct) + self.elem_dct['H'][0]*3
                                        + self.elem_dct['O'][0],
-                         # '[LPL(FA)-H]-': self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
-                         #           + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)
-                         #           + self.elem_dct['H'][0] + self.elem_dct['O'][0],
-                         # '[LPL(FA)-H2O-H]-': self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
-                         #               + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)
-                         #               - self.elem_dct['H'][0],
-                         # '[LPL(FA)-CH3]-': self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
-                         #             + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)
-                         #             - self.elem_dct['H'][0] + self.elem_dct['O'][0] - self.elem_dct['C'][0],
-                         # '[LPL(FA)-H2O-CH3]-': self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
-                         #                 + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct) - self.elem_dct['C'][0]
-                         #                 - self.elem_dct['H'][0] * 3,
                          '[X-(FA)+H]+': self.elem_dct['H'][0],  # will be calculate from the exact neutral mass of the lipid thats the reason we do not need to add the neutral loss of NH3 in the case of TG
                          '[X-(FA-H2O)+H]+': self.elem_dct['H'][0] * 3 + self.elem_dct['O'][0],  # Will be calculated by the exact neutral mass of the lipid molecule minus the exact mass of the fa.
                                                                                                 # In this case where the fa is loss without the water we need to add it in this step to have the correct calculation
                          '[X-(FA)+Na]+': self.elem_dct['Na'][0],
                          '[X-(FA-H+Na)+H]+': self.elem_dct['H'][0]}
-                         # '[M-(FA)+H]+': self.elem_dct['H'][0],
-                         # '[M-(FA-H2O)+H]+': self.elem_dct['H'][0]*3 + self.elem_dct['O'][0],
-                         # '[M-(FA)+Na]+': self.elem_dct['Na'][0],
-                         # '[M-(FA-H+Na)+H]+': self.elem_dct['H'][0]}
-
-
-        # Note: the reason that i cannot use the above is because of the adiotion of glycerol bone or head (georgia: 21.2.2019)
-        # Note: Need to find a more unify way who to do this (georgia: 21.2.2019)
-        # Note: one solution is to put the above in a list where the first cell is the loss and the other the additional fragments info (eg glycerol) (georgia: 21.2.2019)
-
-        # self.loss_dct2 = {'[FA-H]-': [-self.elem_dct['H'][0], ''],
-        #                   '[FA-H2O]': [-(self.elem_dct['H'][0] * 2 + self.elem_dct['O'][0]), ''],
-        #                   '[FA-H2O-H]-': [-(self.elem_dct['H'][0] * 3 + self.elem_dct['O'][0]), ''],
-        #                   '[FA-H2O+H]+': [-(self.elem_dct['H'][0] + self.elem_dct['O'][0]), ''],
-        #                   '[FA-H+Na]': [self.elem_dct['Na'][0] - self.elem_dct['H'][0], ''],
-        #                   '[LCB+H]+': [self.elem_dct['H'][0], ''],
-        #                   '[LCB-H2O+H]+': [-(self.elem_dct['H'][0] + self.elem_dct['O'][0]), ''],
-        #                   '[LCB-2xH2O+H]+': [-(self.elem_dct['H'][0] * 3 + self.elem_dct['O'][0] * 2), ''],
-        #                   '[LCB-H2O-CH2O+H]+': [-(
-        #                              self.elem_dct['H'][0] * 3 + self.elem_dct['O'][0] * 2 + self.elem_dct['C'][0]), ''],
-        #                   '[LCB-3xH2O+H]+': [-(self.elem_dct['H'][0] * 5 + self.elem_dct['O'][0] * 3), ''],
-        #                   '[LCB-2xH2O-CH2O+H]+': [-(
-        #                           self.elem_dct['H'][0] * 5 + self.elem_dct['O'][0] * 3 + self.elem_dct['C'][0]), ''],
-        #                   '[FA-OH+NH3]+': [self.elem_dct['N'][0] + self.elem_dct['H'][0] * 2 - self.elem_dct['O'][0], ''],
-        #                   '[FA-OH+C2H3N]+': [(self.elem_dct['C'][0] + self.elem_dct['N'][0] + self.elem_dct['H'][0] * 2 -
-        #                                     self.elem_dct['O'][0]), ''],
-        #                   '[MG(FA)-H2O+H]+': [ -self.elem_dct['H'][0], self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
-        #                                      + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)],
-        #                   '[x-H]-': [self.elem_dct['H'][0] + self.elem_dct['O'][0], self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
-        #                            + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)],
-        #                   '[x-H2O-H]-': [ -self.elem_dct['H'][0], self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
-        #                                + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)],
-        #                   '[x-CH3]-': [ -self.elem_dct['H'][0] + self.elem_dct['O'][0] - self.elem_dct['C'][0],
-        #                                self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
-        #                              + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)],
-        #                   '[x-H2O-CH3]-': [ -self.elem_dct['C'][0] - self.elem_dct['H'][0] * 3,
-        #                                    self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
-        #                                  + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)],
-        #                   '[LPL(FA)-H]-': [self.elem_dct['H'][0] + self.elem_dct['O'][0],
-        #                              self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
-        #                              + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)],
-        #                   '[LPL(FA)-H2O-H]-': [-self.elem_dct['H'][0], self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
-        #                                  + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)],
-        #                   '[LPL(FA)-CH3]-': [-self.elem_dct['H'][0] + self.elem_dct['O'][0] - self.elem_dct['C'][0],
-        #                                self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
-        #                                + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)],
-        #                   '[LPL(FA)-H2O-CH3]-': [-self.elem_dct['C'][0] - self.elem_dct['H'][0] * 3,
-        #                                    self.calc_fa_mass(ElemCalc().lipid_hg_elem_dct[lclass])
-        #                                    + self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)],
-        #                   '[x-H2O+H]+': [self.elem_dct['H'][0] * 3 + self.elem_dct['O'][0],
-        #                                 self.calc_fa_mass(ElemCalc().glycerol_bone_elem_dct)]}
-
 
 
 
@@ -327,18 +253,6 @@ class NameParserFA:
             fa_info_dct['O'] = 1
             fa_info_dct['DB'] = int(fa_info_lst[3])
             fa_info_dct['FORMULA'] = 'C{num_c}H{num_h}O'.format(num_c=fa_info_dct['C'], num_h=fa_info_dct['H'])
-        # elif fa_info_lst[0] in ['d', 'm', 't']:
-        #     # Note: when change all the changes necessary for the new fa list this should be remove
-        #     hydroxy_abbr_dct = {'m': 1, 'd': 2, 't': 3}
-        #     fa_info_dct['LINK'] = fa_info_lst[0]
-        #     fa_info_dct['ABBR'] = fa_str
-        #     fa_info_dct['C'] = int(fa_info_lst[1])
-        #     fa_info_dct['H'] = 2 * int(fa_info_lst[1]) - 2 * int(fa_info_lst[3]) + 3
-        #     fa_info_dct['O'] = hydroxy_abbr_dct[fa_info_lst[0]]
-        #     fa_info_dct['N'] = 1
-        #     fa_info_dct['DB'] = fa_info_lst[3]
-        #     fa_info_dct['FORMULA'] = 'C{num_c}H{num_h}O{num_o}N'.format(num_c=fa_info_dct['C'], num_h=fa_info_dct['H'],
-        #                                                                num_o=fa_info_dct['O'])
         elif fa_info_lst[0] == 'SPB':
             fa_info_dct['LINK'] = 'SPB'
             fa_info_dct['ABBR'] = fa_str
@@ -350,36 +264,6 @@ class NameParserFA:
             fa_info_dct['FORMULA'] = 'C{num_c}H{num_h}O{num_o}N'.format(num_c=fa_info_dct['C'], num_h=fa_info_dct['H'],
                                                                        num_o=fa_info_dct['O'])
         return fa_info_dct
-
-    # def get_fa_info(self, fa_str):
-    #
-    #     # (fa_str)
-    #     fa_info_dct = self.get_fa_formula(fa_str)
-    #     exactmass = self.calc_fa_mass(fa_info_dct)
-    #
-    #     fa_info_dct['EXACTMASS'] = exactmass
-    #     fa_info_dct['[FA-H]-_MZ'] = round(exactmass - self.elem_dct['H'][0], 6)
-    #     fa_info_dct['[FA-H2O-H]-_MZ'] = round(exactmass - 3 * self.elem_dct['H'][0] - self.elem_dct['O'][0], 6)
-    #     fa_info_dct['[FA-H2O]_MZ'] = round(exactmass - 2 * self.elem_dct['H'][0] - self.elem_dct['O'][0], 6)
-    #     fa_info_dct['[FA-H2O+H]+_MZ'] = round(exactmass - self.elem_dct['H'][0] - self.elem_dct['O'][0], 6)
-    #     fa_info_dct['[FA-H+Na]_MZ'] = round(exactmass - self.elem_dct['H'][0] + self.elem_dct['Na'][0], 6)
-    #
-    #     fa_info_dct['[FA-H]-_ABBR'] = '[{fa}-H]-'.format(fa=fa_info_dct['ABBR'])
-    #     fa_info_dct['[FA-H2O-H]-_ABBR'] = '[{fa}-H2O-H]-'.format(fa=fa_info_dct['ABBR'])
-    #     fa_info_dct['[FA-H2O]_ABBR'] = '[{fa}-H2O]'.format(fa=fa_info_dct['ABBR'])
-    #     fa_info_dct['[FA-H2O+H]+_ABBR'] = '[{fa}-H2O+H]+'.format(fa=fa_info_dct['ABBR'])
-    #     fa_info_dct['[FA-H+Na]_ABBR'] = '[{fa}-H+Na]'.format(fa=fa_info_dct['ABBR'])
-    #
-    #     return fa_info_dct
-
-
-    # Compine with the calc_fa_mass as above
-    # def get_fa_info(self, fa_str):
-    #     print (fa_str)
-    #     fa_info_dct = self.get_fa_formula(fa_str)
-    #     fa_info_dct = self.calc_fa_all_mz(fa_info_dct)
-    #
-    #     return fa_info_dct
 
     # Note: More general way to define the fragments. Also define specific and not. (georgia: 23.1.2019)
     #Change: Values for HIGH and LOW can be removed. Check if are need or not (georgia: 15.2.2019)
@@ -410,16 +294,6 @@ class NameParserFA:
 
 
         elif fa_info['LINK'] in ['FA', 'O-', 'P-']:
-            # if lclass == 'Cer':
-            #     fragment_list = self.lipid_mode_dct[lclass][mode][1]
-            #     for frag in fragment_list:
-            #         fa_info['{f}_MZ'.format(f=frag)] = round(exactmass + self.loss_dct[frag], 6)
-            #         fa_info['{f}_ABBR'.format(f=frag)] = frag.replace('FA', fa_info['ABBR'])
-            #         low_v = round(ppm_window_para(fa_info['{f}_MZ'.format(f=frag)],
-            #                                                                ms2_ppm * -1), 6)
-            #         high_v = round(ppm_window_para(fa_info['{f}_MZ'.format(f=frag)], ms2_ppm), 6)
-            #         fa_info['{f}_Q'.format(f=frag)] = (low_v.astype(str)) + ' <= mz <= ' + (high_v.astype(str))
-            # else:
                 fragment_list = self.lipid_mode_dct[lclass][mode][0]
                 for frag in fragment_list:
                     fa_info['{f}_MZ'.format(f=frag)] = round(exactmass + self.loss_dct[frag], 6)
@@ -443,7 +317,7 @@ class NameParserFA:
 
         return (fa_info)
     # Note: my function so i will be able to test a theory about who to solve a problem
-    def get_fa_info_geo(self, fa_str, lipid_class, ion_mode, ms2_ppm = 20):
+    def get_fa_info(self, fa_str, lipid_class, ion_mode, ms2_ppm = 20):
 
         #print (fa_str)
         fa_info_dct = self.get_fa_formula(fa_str)
@@ -461,7 +335,7 @@ if __name__ == '__main__':
     ionM = '[M+H]+'
     abbr_lst = ['SPB18:1;1', 'SPB18:1;2',  'SPB18:1;3', 'FA16:0', 'FA18:0']
     for abbr in abbr_lst:
-        x = abbr_decoder.get_fa_info_geo(abbr, lipidC, ionM)
+        x = abbr_decoder.get_fa_info(abbr, lipidC, ionM)
         print(x)
     # Note: Alternative way to test the function
     # from test.test_LipidNomenclature import test_get_fa_info

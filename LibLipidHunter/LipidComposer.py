@@ -68,17 +68,7 @@ class LipidComposer:
         lipid_class_dct = NameParserFA(lipid_class).lipid_fa_dct[lipid_class]
         #print (NameParserFA(lipid_class).lipid_fa_dct[lipid_class])
         if lipid_class_dct[0] in header_lst and 'FATTYACID' in header_lst:
-            # Note:  if statement will be remove
-            # if lipid_class_dct[2] == 'Base':
-            #     base_lst=[]
-            #     for k in lipid_class_dct[3]:
-            #         q_str = '{cl} == "T" and {fa} == "T"'.format(cl=lipid_class_dct[0], fa=k)
-            #         fa_lst = fa_df.query(q_str)['FATTYACID'].tolist()
-            #         fa_l_st = '_'.join(fa_lst)
-            #         fa_l_st = fa_l_st.replace('FA', k.lower())
-            #         fa_lst = fa_l_st.split('_')
-            #         base_lst = base_lst + fa_lst
-            #     sn_units_lst.append(base_lst)
+
             for k in lipid_class_dct[1]:
                 q_str = '{cl} == "T" and {fa} == "T"'.format(cl=lipid_class_dct[0], fa=k)
                 #print(q_str)
@@ -134,7 +124,7 @@ class LipidComposer:
         usr_fa_dct = {}
         for _fa_abbr in fa_abbr_lst:
             if _fa_abbr:
-                _fa_info_dct = abbr_parser.get_fa_info_geo(_fa_abbr, lipid_class, ion_mode)  # Calculate all the information for each FA
+                _fa_info_dct = abbr_parser.get_fa_info(_fa_abbr, lipid_class, ion_mode)  # Calculate all the information for each FA
                 usr_fa_dct[_fa_abbr] = _fa_info_dct
 
         usr_fa_df = pd.DataFrame(usr_fa_dct).T.copy()  # put all the info for the FA in a dataframe
@@ -260,7 +250,7 @@ class LipidComposer:
         return lipid_comb_dct
 
 
-    def calc_fragments_geo(self, lipid_dct, charge='', ms2_ppm=100):
+    def calc_fragments(self, lipid_dct, charge='', ms2_ppm=100):
 
         # m_formula = lipid_dct['FORMULA']
         abbr_name= NameParserFA(lipid_dct['CLASS'])
@@ -347,9 +337,6 @@ class LipidComposer:
         lipid_class_dct = NameParserFA(lipid_class).lipid_fa_dct[lipid_class]
 
         fa_header_lst = lipid_class_dct[1]
-        # Comment: can be deleted
-        # if NameParserFA().lipid_fa_dct[lipid_class][2] is not None:
-        #     fa_header_lst = [NameParserFA().lipid_fa_dct[lipid_class][2]] + fa_header_lst
 
         for _lipid in list(lipid_comb_dct.keys()):
             _lipid_dct = lipid_comb_dct[_lipid]
@@ -398,11 +385,7 @@ class LipidComposer:
             _lipid_dct[lipid_charge + '_FORMULA'] = _chg_lipid_formula
             _lipid_dct[lipid_charge + '_MZ'] = elem_calc.get_exactmass(_chg_lipid_elem_dct)
 
-            # fragments
-            # if lipid_class in ['Cer', 'TG']:
-            _lipid_dct = self.calc_fragments_geo(_lipid_dct, charge=lipid_charge, ms2_ppm=ms2_ppm)
-            # else:
-            #     _lipid_dct = self.calc_fragments(_lipid_dct, charge=lipid_charge, ms2_ppm=ms2_ppm)
+            _lipid_dct = self.calc_fragments(_lipid_dct, charge=lipid_charge, ms2_ppm=ms2_ppm)
 
             # Question: for what reason is needed this table (georgia: 13.2.2019)
             lipid_info_dct[_lipid] = _lipid_dct
