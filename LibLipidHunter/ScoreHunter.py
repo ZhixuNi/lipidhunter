@@ -257,6 +257,12 @@ def prep_rankscore (obs_d, obs_dct, origin_info_df, sliced_info_df, weight_dct, 
         unique_fa_abbr_dct = {}
         fa_multi_dct = {}  # store multiple FA
 
+        _spb_type = _lite_se['FA1_O']
+        if lipid_class == 'Cer':
+            weight_tmp_df = weight_dct[weight_dct['SPB'] == _spb_type]
+        else:
+            weight_tmp_df = weight_dct
+
         _fa_f = 0
         for _i in _fa_sn_lst:
 
@@ -280,13 +286,13 @@ def prep_rankscore (obs_d, obs_dct, origin_info_df, sliced_info_df, weight_dct, 
                 for _idx2,_f_s in _obs_df_fa.iterrows():
                     _f_w = _f_s['obs_type']
 
-                    if _f_w in weight_dct.index.tolist():
+                    if _f_w in weight_tmp_df.index.tolist():
                         origin_info_df.at[_idx, '{f}_i'.format(f=_f_w)] = _f_s['i']
                         origin_info_df.at[_idx, '{f}_i_per'.format(f=_f_w)] = _f_s['obs_i_r']
                         # Note: maybe in this section we should put kind of control if the fragments are in the df
                         obs_r = obs_dct.loc[(_fa_abbr, _f_s['obs_type_g']), 'obs_rank']
                         origin_info_df.at[_idx, '{f}_RANK'.format(f=_f_w)] = obs_r
-                        origin_info_df.at[_idx, '{f}_SCORE'.format(f=_f_w)] = ((11 - obs_r) * 0.1 * weight_dct.loc[_f_w, 'Weight'])
+                        origin_info_df.at[_idx, '{f}_SCORE'.format(f=_f_w)] = ((11 - obs_r) * 0.1 * weight_tmp_df.loc[_f_w, 'Weight'])
                         if _i == 'M':
                             _rank_score += origin_info_df.loc[_idx, '{f}_SCORE'.format(f=_f_w)]
                             _ident_peak_count += 1
@@ -322,12 +328,12 @@ def prep_rankscore (obs_d, obs_dct, origin_info_df, sliced_info_df, weight_dct, 
                         # Note: checking if found any type of fragments, later will included only specific ones
                         for _idx2, _f_s in _obs_df_fa.iterrows():
                             _f_w = _f_s['obs_type']
-                            if _f_w in weight_dct.index.tolist():
+                            if _f_w in weight_tmp_df.index.tolist():
                                 origin_info_df.loc[_idx, '{f}_i'.format(f=_f_w)] = _obs_df_fa_r.loc[(_fa_abbr, _f_s['obs_type_g']), 'i']
                                 origin_info_df.loc[_idx, '{f}_i_per'.format(f=_f_w)] = _obs_df_fa_r.loc[(_fa_abbr, _f_s['obs_type_g']),'obs_i_r']
                                 origin_info_df.loc[_idx, '{f}_RANK'.format(f=_f_w)] = _obs_df_fa_r.loc[(_fa_abbr, _f_s['obs_type_g']),'obs_rank']
                                 origin_info_df.loc[_idx, '{f}_SCORE'.format(f=_f_w)] = (
-                                            (11 - _obs_df_fa_r.loc[(_fa_abbr, _f_s['obs_type_g']),'obs_rank']) * 0.1 * weight_dct.loc[_f_w, 'Weight'])
+                                            (11 - _obs_df_fa_r.loc[(_fa_abbr, _f_s['obs_type_g']),'obs_rank']) * 0.1 * weight_tmp_df.loc[_f_w, 'Weight'])
                                 _rank_score += origin_info_df.loc[_idx, '{f}_SCORE'.format(f=_f_w)]
                                 _ident_peak_count += 1
             else:

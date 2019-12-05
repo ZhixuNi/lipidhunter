@@ -127,6 +127,8 @@ def huntlipids(param_dct: dict, error_lst: list,
 
     start_time = time.clock()
     lipidcomposer = LipidComposer()
+    # TODO (georgia.angelidou@uni-leipzig.de): Add function where each given parame is checked to make sure that we get only the values that we need
+    # This way we would not need to strictly check all the time the different values.
 
     usr_lipid_class = param_dct['lipid_class']
     usr_charge = param_dct['charge_mode']
@@ -298,7 +300,8 @@ def huntlipids(param_dct: dict, error_lst: list,
     print('[INFO] --> Lipid class: %s' % usr_lipid_class)
 
     # generate the Weight factor df
-    usr_weight_df = pd.read_excel(score_cfg, index_col='Type')
+    # usr_weight_df = pd.read_excel(score_cfg, index_col='Type')
+    usr_weight_df = pd.read_excel(score_cfg, sheet_name="Cer", index_col='Type', comment="#")
     output_list = []    # will be needed at the end where the excel file is created
     output_round_dct = {r'MS1_obs_mz': 4, r'Lib_mz': 4, 'ppm': 2, 'MS2_scan_time': 3}   # will be needed at the end
     # output_short_lst missing the following: '#Specific_peaks', '#Unspecific_peaks'
