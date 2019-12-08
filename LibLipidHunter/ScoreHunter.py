@@ -555,6 +555,52 @@ def ions_control_check(ch_mode, abbr_bulk, ms1_pr, _ms1_df, core_c ):
         _mz_amm_iso_flag = 0
     return(_mz_amm_iso_flag)
 
+def ions_control_cer(ch_mode, abbr_bulk, ms1_pr, _ms1_df, core_c ):
+    # ion flag will be use as an indicator if our precursor correspond to the proposed ion adduct or not
+    _mz_amm_iso_flag = ''
+    _mz_amm_iso_flag2 = ''
+    isotope_hunter = IsotopeHunter()
+    get_element = ElemCalc()
+
+    if ch_mode in ['[M+H]+']:
+        _mz_amm_formula, _mz_amm_elem_dct = get_element.get_formula(abbr_bulk, charge='neutral')
+        _mz_amm_elem_dct['O'] += 1
+        _mz_amm_elem_dct['H'] += 3
+        _mz_df_amm = pd.DataFrame()
+        _mz_amm_mz = get_element.get_exactmass(_mz_amm_elem_dct)
+
+        _frag_mz_query_code = '%f <= mz <= %f' % (_mz_amm_mz - 0.2, _mz_amm_mz + 0.2)
+        # TODO (georgia.angelidou@uni-leipzig.de): Need to check the reason why we do not get any output
+
+        if not _ms1_df.query(_frag_mz_query_code).empty:
+            # print('Go and check line 613 from ScoreHunter.py to see what is going on')
+            _mz_df_amm = _ms1_df.query(_frag_mz_query_code)
+            _mz_df_amm.reset_index(inplace=True, drop=True)
+            _mz_amm_i = _mz_df_amm.loc[0, 'i']
+            # if charge_mode in ['[M+H]+']:
+            _mz_amm_formula = 'C' + str(_mz_amm_elem_dct['C']) + 'H' + str(
+                _mz_amm_elem_dct['H']) + 'O' + str(_mz_amm_elem_dct['O']) + 'N'
+
+            _mz_amm_iso_flag2 = isotope_hunter.get_isotope_fragments(_mz_amm_mz, _mz_amm_i,
+                                                                     _mz_amm_formula, _ms1_df,
+                                                                     core_c)
+            # else:
+            #     _mz_amm_iso_flag2 = 0
+        else:
+            _mz_amm_i = 0
+            _mz_amm_iso_flag2 = 1
+
+        if _mz_amm_iso_flag2 == 1:
+            _mz_amm_iso_flag = 0
+        else:
+            _mz_amm_iso_flag = 1
+
+
+    else:
+        _mz_amm_iso_flag = 0
+    return(_mz_amm_iso_flag)
+
+
 
 def get_lipid_info(param_dct, fa_df, checked_info_df, checked_info_groups, core_list, usr_weight_df,
                    key_frag_dct, core_spec_dct, xic_dct, core_count, save_fig=True, os_type='windows', queue=None):
@@ -685,7 +731,11 @@ def get_lipid_info(param_dct, fa_df, checked_info_df, checked_info_groups, core_
                         _mz_amm_iso_flag = ions_control_check(charge_mode, _usr_abbr_bulk, _ms1_pr_mz, _ms1_df, core_count)
                     else:
                         _mz_amm_iso_flag = 0
-
+                    # TODO (georgia.angelidou@uni-leipzig.de): Add the control for water loss of Ceramides
+                    if usr_lipid_type == 'Cer':
+                        # TODO: Also add to change the identification of water loss
+                        _mz_amm_iso_flag = ions_control_cer(charge_mode, _usr_abbr_bulk, _ms1_pr_mz, _ms1_df,
+                                                              core_count)
 
                     if _mz_amm_iso_flag == 0:
                         matched_checker, obs_info_dct = get_rankscore(fa_df, checked_info_df, _usr_abbr_bulk,
